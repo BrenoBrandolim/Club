@@ -58,3 +58,6 @@ CREATE TABLE resgates (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     FOREIGN KEY (produto_id) REFERENCES produtos_clube(id)
 );
+
+INSERT INTO produtos_clube (nome, foto_url, pontos_necessarios, ativo)
+VALUES ('Teste Produto', 'http://teste.com/img.png', 10, TRUE);
