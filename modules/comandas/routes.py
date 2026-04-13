@@ -58,3 +58,4 @@ def comanda_fechada():
     resultado = comanda_fechada_service(comanda_id, lucro_liquido)
 
     return jsonify(resultado)
+

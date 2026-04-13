@@ -29,7 +29,7 @@ def buscar_por_nickname(nickname):
             WHERE nickname = %s""", (nickname,)
         )
  
-        return cursor.fetchone() is not None
+        return cursor.fetchone()
     finally:
         conn.close()
 
@@ -45,7 +45,7 @@ def buscar_usuario_por_id(usuario_id):
             WHERE id = %s""", (usuario_id,)
         )
 
-        return cursor.fetchone() is not None
+        return cursor.fetchone()
     finally:
         conn.close()
         
