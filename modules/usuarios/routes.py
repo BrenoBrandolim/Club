@@ -1,5 +1,9 @@
 from flask import Blueprint, request, jsonify
-from .service import criar_usuario_service
+from .service import (
+    criar_usuario_service,
+    login_usuario_service
+)
+
 
 usuario_bp = Blueprint(
     'usuarios',
@@ -18,9 +22,27 @@ def criar_usuario():
     if not nome or not nickname or not senha:
         return jsonify({
             "ok": False,
-            "mensagem": "Campos obrigatórios faltando"
+            "message": "Campos obrigatórios faltando"
         }), 400
     
     resultado = criar_usuario_service(nome, nickname, senha)
+
+    return jsonify(resultado)
+
+
+@usuario_bp.route('/login', methods=['POST'])
+def login_usuario():
+    data = request.get_json()
+
+    nickname = data.get('nickname')
+    senha = data.get('senha')
+
+    if not nickname or not senha:
+        return jsonify({
+            "ok": False,
+            "message": "Campos obrigatórios faltando"
+        }), 400
+    
+    resultado = login_usuario_service(nickname, senha)
 
     return jsonify(resultado)

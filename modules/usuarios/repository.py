@@ -28,8 +28,24 @@ def buscar_por_nickname(nickname):
             FROM usuarios
             WHERE nickname = %s""", (nickname,)
         )
+ 
+        return cursor.fetchone() is not None
+    finally:
+        conn.close()
 
-        return cursor.fetchone()
+
+def buscar_usuario_por_id(usuario_id):
+    conn = get_connection()
+    try:
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT id, nome, nickname, senha_hash
+            FROM usuarios
+            WHERE id = %s""", (usuario_id,)
+        )
+
+        return cursor.fetchone() is not None
     finally:
         conn.close()
         

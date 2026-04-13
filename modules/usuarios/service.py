@@ -28,3 +28,27 @@ def criar_usuario_service(nome, nickname, senha):
         "user_id": user_id
     }
     
+
+def login_usuario_service(nickname, senha):
+    
+    # Verificar se o usuário existe
+    usuario = buscar_por_nickname(nickname)
+
+    if not usuario:
+        return {
+            "ok": False,
+            "message": "Nickname ou senha incorretos"
+        }
+    
+    # Verificar a senha
+    if not bcrypt.checkpw(senha.encode('utf-8'), usuario['senha_hash'].encode('utf-8')):
+        return {
+            "ok": False,
+            "message": "Nickname ou senha incorretos"
+        }
+    
+    return {
+        "ok": True,
+        "message": "Login bem-sucedido",
+        "user_id": usuario['id']
+    }
