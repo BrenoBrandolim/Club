@@ -6,7 +6,7 @@ def listar_produtos_db():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT id, nome, pontos_necessarios, preco_dinheiro
+            SELECT id, nome, pontos_necessarios, preco_dinheiro, foto_url, item_id
             FROM produtos_clube
             WHERE ativo = TRUE
         """)

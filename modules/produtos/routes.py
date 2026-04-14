@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from .service import (
     listar_produtos_service,
-    sync_produto_service
+    sync_produto_service,
+    resgatar_produto_service
 )
 
 produtos_bp = Blueprint(
@@ -19,5 +20,14 @@ def sync_produto():
     data = request.json
 
     sync_produto_service(data)
+
+    return {"ok": True}
+
+
+@produtos_bp.route("/resgatar", methods=["POST"])
+def resgatar_produto():
+    data = request.json
+
+    resgatar_produto_service(data)
 
     return {"ok": True}
