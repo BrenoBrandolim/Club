@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Club</title>
+</head>
+<body>
+
+<script>
+    // Verifica se já tem token salvo
+    const token = localStorage.getItem("token");
+
+    if (token) {
+        // Usuário já logado → vai pro dashboard
+        window.location.href = "/dashboard";
+    } else {
+        // Não logado → vai pro login
+        window.location.href = "/login";
+    }
+</script>
+
+</body>
+</html>

@@ -52,6 +52,7 @@ def buscar_vinculo_completo_db(comanda_id):
         conn.close()
 
 
+
 def inserir_pontos_db(usuario_id, valor, comanda_id):
     conn = get_connection()
     try:

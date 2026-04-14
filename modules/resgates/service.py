@@ -1,7 +1,8 @@
 from .repository import (
     buscar_produto_por_id_db,
     criar_resgate_db,
-    debitar_pontos_db
+    debitar_pontos_db,
+    listar_resgates_usuario_db
 )
 
 from modules.comandas.repository import buscar_vinculo_completo_db
@@ -77,3 +78,12 @@ def resgatar_produto_service(usuario_id, produto_id, comanda_id):
 
     finally:
         conn.close()
+
+
+def listar_resgates_usuario_service(usuario_id):
+    resgates = listar_resgates_usuario_db(usuario_id)
+
+    return {
+        "ok": True,
+        "resgates": resgates
+    }

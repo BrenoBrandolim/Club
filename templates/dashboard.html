@@ -1,0 +1,34 @@
+<h1>Dashboard</h1>
+
+<p>Saldo: <span id="saldo">0</span></p>
+
+<input id="comanda_id" placeholder="ID da comanda">
+<button onclick="vincular()">Vincular Comanda</button>
+
+<h1>Meus Resgates</h1>
+<ul id="resgates"></ul>
+
+<h2>Resgatar Produto</h2>
+
+<input id="produto_id" placeholder="ID do produto">
+<input id="comanda_resgate" placeholder="ID da comanda">
+<button onclick="resgatar()">Resgatar</button>
+
+
+
+
+<script type="module">
+import { apiRequest } from "/static/js/api.js";
+
+window.vincular = async () => {
+    const comanda_id = document.getElementById("comanda_id").value;
+
+    const res = await apiRequest("/comandas/vincular", "POST", {
+        comanda_id
+    });
+
+    alert(res.message);
+};
+</script>
+
+<script type="module" src="/static/js/dashboard.js"></script>

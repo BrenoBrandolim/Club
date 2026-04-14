@@ -50,3 +50,22 @@ def debitar_pontos_db(conn, usuario_id, valor, comanda_id):
         ))
     finally:
         cursor.close()
+
+
+def listar_resgates_usuario_db(usuario_id):
+    conn = get_connection()
+    try:
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT r.id, r.comanda_id, r.pontos_gastos, r.data_criacao,
+                   p.nome as produto_nome
+            FROM resgates r
+            JOIN produtos_clube p ON p.id = r.produto_id
+            WHERE r.usuario_id = %s
+            ORDER BY r.data_criacao DESC
+        """, (usuario_id,))
+
+        return cursor.fetchall()
+    finally:
+        conn.close()

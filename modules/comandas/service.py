@@ -83,3 +83,4 @@ def comanda_fechada_service(comanda_id, lucro_liquido):
         "message": "Comanda processada e pontos inseridos com sucesso",
         "pontos": pontos
     }
+

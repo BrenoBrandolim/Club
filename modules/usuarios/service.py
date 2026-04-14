@@ -1,7 +1,12 @@
 import bcrypt
+
 from .repository import (
     criar_usuario,
     buscar_por_nickname
+)
+
+from modules.auth.jwt_handler import (
+    gerar_token
 )
 
 def criar_usuario_service(nome, nickname, senha):
@@ -47,8 +52,10 @@ def login_usuario_service(nickname, senha):
             "message": "Nickname ou senha incorretos"
         }
     
+    token = gerar_token(usuario['id'])
+    
     return {
         "ok": True,
         "message": "Login bem-sucedido",
-        "user_id": usuario['id']
+        "token": token
     }

@@ -1,5 +1,8 @@
 from flask import Blueprint, request, jsonify
 
+from modules.auth.api_key import api_key_required
+from modules.auth.decorator import auth_required
+
 from .service import (
     vincular_comanda_usuario_service,
     comanda_fechada_service
@@ -13,7 +16,8 @@ comandas_bp = Blueprint(
 )
 
 @comandas_bp.route('/vincular', methods=['POST'])
-def vincular_comanda_usuario():
+@auth_required
+def vincular_comanda_usuario(usuario_id_token):
     data = request.get_json()
 
     if not data:
@@ -23,9 +27,9 @@ def vincular_comanda_usuario():
         }), 400
 
     comanda_id = data.get('comanda_id')
-    usuario_id = data.get('usuario_id')
+    usuario_id = usuario_id_token
 
-    if not comanda_id or not usuario_id:
+    if not comanda_id:
         return jsonify({
             "ok": False,
             "message": "Campos obrigatórios faltando"
@@ -36,7 +40,9 @@ def vincular_comanda_usuario():
     return jsonify(resultado)
 
 
+
 @comandas_bp.route('/fechada', methods=['POST'])
+@api_key_required
 def comanda_fechada():
     data = request.get_json()
 

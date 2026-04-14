@@ -1,5 +1,14 @@
 from flask import Blueprint, request, jsonify
-from .service import resgatar_produto_service
+
+from modules.auth.decorator import (
+    auth_required
+)
+
+from .service import (
+    resgatar_produto_service,
+    listar_resgates_usuario_service
+)
+
 
 resgates_bp = Blueprint(
     'resgates',
@@ -8,26 +17,31 @@ resgates_bp = Blueprint(
 )
 
 @resgates_bp.route('/resgatar', methods=['POST'])
-def resgatar():
+@auth_required
+def resgatar(usuario_id_token):
     data = request.get_json()
 
     if not data:
         return jsonify({"ok": False, "message": "Dados inválidos"}), 400
 
-    usuario_id = data.get('usuario_id')
     produto_id = data.get('produto_id')
     comanda_id = data.get('comanda_id')
 
-    if not usuario_id or not produto_id or not comanda_id:
+    if not produto_id or not comanda_id:
         return jsonify({
             "ok": False,
             "message": "Campos obrigatórios faltando"
         }), 400
 
     resultado = resgatar_produto_service(
-        usuario_id,
+        usuario_id_token,
         produto_id,
         comanda_id
     )
 
     return jsonify(resultado)
+
+@resgates_bp.route('/usuario', methods=['GET'])
+@auth_required
+def listar_resgates(usuario_id_token):
+    return jsonify(listar_resgates_usuario_service(usuario_id_token))

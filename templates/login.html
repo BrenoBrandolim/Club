@@ -1,0 +1,14 @@
+<input id="nickname" placeholder="Nickname">
+<input id="senha" type="password" placeholder="Senha">
+<button onclick="fazerLogin()">Entrar</button>
+
+<script type="module">
+import { login } from "/static/js/auth.js";
+
+window.fazerLogin = () => {
+    const nickname = document.getElementById("nickname").value;
+    const senha = document.getElementById("senha").value;
+
+    login(nickname, senha);
+};
+</script>
