@@ -40,7 +40,8 @@ CREATE TABLE produtos_clube (
     foto_url VARCHAR(255) NOT NULL,
     pontos_necessarios DECIMAL(10,2) NOT NULL,
     preco_dinheiro DECIMAL(10,2),
-    ativo BOOLEAN DEFAULT TRUE
+    ativo BOOLEAN DEFAULT TRUE,
+    item_id INT UNIQUE
 );
 
 CREATE TABLE resgates (
@@ -59,5 +60,8 @@ CREATE TABLE resgates (
     FOREIGN KEY (produto_id) REFERENCES produtos_clube(id)
 );
 
-INSERT INTO produtos_clube (nome, foto_url, pontos_necessarios, ativo)
-VALUES ('Teste Produto', 'http://teste.com/img.png', 10, TRUE);
+INSERT INTO usuarios (nome, nickname, senha_hash)
+VALUES ('Breno', 'light', '123456');
+
+INSERT INTO pontos (usuario_id, tipo, valor, descricao)
+VALUES (1, 'ganho', 10000, 'Carga manual para teste');
