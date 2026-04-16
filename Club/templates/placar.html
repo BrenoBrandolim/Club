@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Club · Placar</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .placar-header {
+            text-align: center;
+            padding: 32px 20px 24px;
+        }
+        .placar-title {
+            font-family: var(--font-display);
+            font-size: 52px;
+            letter-spacing: 6px;
+            color: var(--text);
+            line-height: 1;
+        }
+        .placar-sub {
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            margin-top: 8px;
+        }
+        .ranking-list { padding: 0 16px 100px; max-width: 520px; margin: 0 auto; }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 10px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .ranking-item.top1 {
+            background: linear-gradient(135deg, #1e0e04 0%, #2a1508 100%);
+            border-color: var(--border-glow);
+            box-shadow: var(--gold-glow);
+        }
+        .ranking-item.top2 { background: var(--surface2); }
+        .ranking-item.top3 { background: var(--surface2); }
+
+        .ranking-pos {
+            font-family: var(--font-display);
+            font-size: 28px;
+            letter-spacing: 1px;
+            width: 36px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .top1 .ranking-pos { color: var(--gold-light); }
+        .top2 .ranking-pos { color: #b0b0b8; }
+        .top3 .ranking-pos { color: #c8956a; }
+        .ranking-pos.outros { color: var(--text-dim); font-size: 18px; }
+
+        .ranking-medal { font-size: 22px; }
+
+        .ranking-info { flex: 1; min-width: 0; }
+        .ranking-nome {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ranking-nick { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+        .ranking-pts {
+            font-family: var(--font-mono);
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--gold);
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .ranking-pts span { font-size: 10px; color: var(--text-dim); display: block; }
+
+        .minha-pos {
+            background: var(--gold-dim);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            margin: 0 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--gold);
+            font-weight: 600;
+            max-width: 488px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="bottom-nav">
+    <a href="/dashboard"><span class="nav-icon">⬡</span>Início</a>
+    <a href="/catalogo"><span class="nav-icon">✦</span>Catálogo</a>
+    <a href="/placar" class="active"><span class="nav-icon">🏆</span>Placar</a>
+    <a href="/menu"><span class="nav-icon">☰</span>Menu</a>
+</nav>
+
+<div class="placar-header">
+    <div style="font-size:48px; margin-bottom:8px;">🏆</div>
+    <div class="placar-title">PLACAR</div>
+    <div class="placar-sub">Top 10 — Pontos ganhos</div>
+</div>
+
+<!-- Minha posição -->
+<div class="minha-pos" id="minha-posicao" style="display:none;">
+    <span>📍 Sua posição</span>
+    <span id="minha-pos-valor">—</span>
+</div>
+
+<div class="ranking-list" id="ranking-lista">
+    <div class="skeleton" style="height:70px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+    <div class="skeleton" style="height:70px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+    <div class="skeleton" style="height:70px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+    <div class="skeleton" style="height:70px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+    <div class="skeleton" style="height:70px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+</div>
+
+<script type="module">
+import { apiRequest, getUser } from "/static/js/api.js";
+
+const medalhas = ["🥇", "🥈", "🥉"];
+const user = getUser();
+
+async function carregarRanking() {
+    const lista = document.getElementById("ranking-lista");
+    const res = await apiRequest("/api/pontos/ranking");
+
+    if (!res.ok || !res.ranking.length) {
+        lista.innerHTML = `<p class="text-sub text-center" style="padding:40px 0;">Nenhum dado disponível.</p>`;
+        return;
+    }
+
+    lista.innerHTML = res.ranking.map((r, i) => {
+        const classe  = i === 0 ? "top1" : i === 1 ? "top2" : i === 2 ? "top3" : "";
+        const posHTML = i < 3
+            ? `<span class="ranking-medal">${medalhas[i]}</span>`
+            : `<span class="ranking-pos outros">${r.posicao}</span>`;
+        const pts = Number(r.pontos_ganhos);
+        const ptsStr = pts % 1 === 0 ? pts.toFixed(0) : pts.toFixed(2);
+        const ehVoce = user.nickname && r.nickname === user.nickname;
+
+        return `
+        <div class="ranking-item ${classe}" style="${ehVoce ? 'border-color:var(--gold);' : ''}">
+            ${posHTML}
+            <div class="ranking-info">
+                <div class="ranking-nome">${r.nome} ${ehVoce ? '👈' : ''}</div>
+                <div class="ranking-nick">@${r.nickname}</div>
+            </div>
+            <div class="ranking-pts">
+                ${ptsStr}
+                <span>pts ganhos</span>
+            </div>
+        </div>`;
+    }).join("");
+
+    // Minha posição
+    if (user.nickname) {
+        const minhaPos = res.ranking.find(r => r.nickname === user.nickname);
+        if (minhaPos) {
+            document.getElementById("minha-posicao").style.display = "flex";
+            document.getElementById("minha-pos-valor").textContent =
+                `#${minhaPos.posicao} · ${Number(minhaPos.pontos_ganhos).toFixed(2)} pts`;
+        }
+    }
+}
+
+carregarRanking();
+</script>
+
+</body>
+</html>

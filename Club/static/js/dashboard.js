@@ -15,7 +15,7 @@ function preencherNome() {
     if (k && user.nickname) k.textContent = "@" + user.nickname;
 }
 
-// ── Saldo ─────────────────────────────────────────────────────
+// ── Saldo (Com animação original) ──────────────────────────────
 async function carregarSaldo() {
     const res = await apiRequest("/api/pontos/saldo");
     if (res.ok) {
@@ -26,7 +26,7 @@ async function carregarSaldo() {
 
 function animarNumero(el, de, para, ms) {
     const inicio = performance.now();
-    const fmt    = v => Number(v).toFixed(2).replace(".", ",");
+    const fmt    = v => Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     function tick(agora) {
         const p = Math.min((agora - inicio) / ms, 1);
         const e = 1 - Math.pow(1 - p, 3);
@@ -36,69 +36,47 @@ function animarNumero(el, de, para, ms) {
     requestAnimationFrame(tick);
 }
 
-// ── Comanda ativa (do localStorage — salvo pelo QR) ─────────
-function mostrarComandaAtiva() {
-    const numero = localStorage.getItem("club_numero_comanda");
-    const sec    = document.getElementById("comanda-ativa-section");
-    if (!numero || !sec) return;
+// ── Comanda Ativa (Agora via API - Sem localStorage manual) ──
+async function gerenciarComandaAtiva() {
+    const secAtiva = document.getElementById("comanda-ativa-section");
+    const secSem   = document.getElementById("sem-comanda-section");
+    
+    if (!secAtiva || !secSem) return;
 
-    sec.innerHTML = `
-        <div class="card" style="padding:16px 20px; border-color:var(--border-glow);
-             background:linear-gradient(135deg,#1a1608,#241d0a);">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                <div>
-                    <div style="font-size:10px; font-weight:600; letter-spacing:2px;
-                                text-transform:uppercase; color:var(--gold); opacity:.7; margin-bottom:4px;">
-                        Comanda Ativa
+    // Busca no servidor se há uma comanda aberta para este CPF/ID
+    const res = await apiRequest("/api/comanda/ativa");
+
+    if (res.ok && res.ativa) {
+        secSem.style.display = "none";
+        secAtiva.innerHTML = `
+            <div class="card" style="padding:24px; border-color:var(--border-glow);
+                 background: linear-gradient(135deg, #1a1608 0%, #241d0a 100%);
+                 box-shadow: var(--gold-glow);">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <div>
+                        <div class="label" style="color:var(--gold); margin-bottom:8px;">Comanda Ativa</div>
+                        <div style="font-family:var(--font-display); font-size:48px; color:var(--gold-light); line-height:1;">
+                            #${res.numero_comanda}
+                        </div>
                     </div>
-                    <div style="font-family:var(--font-display); font-size:32px; letter-spacing:2px;
-                                color:var(--gold-light);">#${numero}</div>
+                    <div style="text-align:right;">
+                        <div class="label">Mesa</div>
+                        <div style="font-size:20px; font-weight:600; color:var(--text);">${res.mesa || '--'}</div>
+                    </div>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-sub);">Acumulando pontos automaticamente</span>
                     <a href="/catalogo" class="btn btn-gold btn-sm">✦ Resgatar</a>
-                    <button class="btn btn-ghost btn-sm" id="btn-desassociar"
-                            style="font-size:10px;">Desassociar</button>
                 </div>
-            </div>
-        </div>`;
-    sec.style.display = "block";
-
-    document.getElementById("btn-desassociar")?.addEventListener("click", () => {
-        localStorage.removeItem("club_numero_comanda");
-        sec.style.display = "none";
-        toastSuccess("Comanda desassociada da visualização.");
-    });
-
-    // Pré-preenche o input de vinculação
-    const inp = document.getElementById("comanda-input");
-    if (inp && !inp.value) inp.value = numero;
-}
-
-// ── Vincular comanda ──────────────────────────────────────────
-async function vincularComanda() {
-    const input = document.getElementById("comanda-input");
-    const numero = input?.value?.trim();
-    if (!numero || isNaN(numero)) { toastError("Informe um número de comanda válido"); return; }
-
-    const btn = document.getElementById("btn-vincular");
-    btn.disabled = true;
-    btn.textContent = "Vinculando…";
-
-    const res = await apiRequest(`/api/comanda/${numero}/vincular`, "POST");
-    btn.disabled = false;
-    btn.textContent = "Vincular";
-
-    if (res.ok) {
-        toastGold("✦ Comanda vinculada! Pontos serão creditados ao fechar.");
-        localStorage.setItem("club_numero_comanda", numero);
-        mostrarComandaAtiva();
-        input.value = "";
+            </div>`;
+        secAtiva.style.display = "block";
     } else {
-        toastError(res.message || "Erro ao vincular comanda");
+        secAtiva.style.display = "none";
+        secSem.style.display = "block";
     }
 }
 
-// ── Histórico ─────────────────────────────────────────────────
+// ── Histórico (Resumo para o Dashboard) ───────────────────────
 async function carregarHistorico() {
     const c = document.getElementById("historico-lista");
     if (!c) return;
@@ -107,11 +85,12 @@ async function carregarHistorico() {
         c.innerHTML = `<p class="text-sub text-center" style="padding:24px 0;">Sem movimentações ainda.</p>`;
         return;
     }
-    c.innerHTML = res.historico.map(h => {
+    // Mostra apenas as 3 últimas no dashboard
+    c.innerHTML = res.historico.slice(0, 3).map(h => {
         const ganho = h.tipo === "ganho";
         const data  = new Date(h.data_criacao).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
         const pts   = Number(h.valor);
-        const ptsStr = pts % 1 === 0 ? pts.toFixed(0) : pts.toFixed(2);
+        const ptsStr = pts.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
         return `
         <div class="historico-item">
             <div class="historico-icon ${h.tipo}">${ganho ? "⬆" : "⬇"}</div>
@@ -119,12 +98,12 @@ async function carregarHistorico() {
                 <div class="desc">${h.descricao || "Movimentação"}</div>
                 <div class="data">${data}</div>
             </div>
-            <div class="historico-valor ${h.tipo}">${ganho ? "+" : "-"}${ptsStr} pts</div>
+            <div class="historico-valor ${h.tipo}">${ganho ? "+" : "-"}${ptsStr}</div>
         </div>`;
     }).join("");
 }
 
-// ── Resgates recentes ────────────────────────────────────────
+// ── Resgates Recentes ────────────────────────────────────────
 async function carregarResgates() {
     const c = document.getElementById("resgates-lista");
     if (!c) return;
@@ -133,34 +112,24 @@ async function carregarResgates() {
         c.innerHTML = `<p class="text-sub text-center" style="padding:24px 0;">Nenhum resgate ainda.</p>`;
         return;
     }
-    c.innerHTML = res.resgates.slice(0, 5).map(r => {
+    // Mostra os 2 últimos no dashboard
+    c.innerHTML = res.resgates.slice(0, 2).map(r => {
         const data = new Date(r.data_criacao).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
         const sc   = r.status === "entregue" ? "pill-success" : "pill-gold";
-        const img  = r.foto_url
-            ? `<img class="resgate-img" src="${r.foto_url}" alt="" onerror="this.style.display='none'">`
-            : `<div class="resgate-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">🎁</div>`;
         return `
         <div class="resgate-card">
-            ${img}
             <div class="resgate-info">
                 <div class="resgate-nome">${r.produto_nome}</div>
-                <div class="resgate-meta">${data} · ${Number(r.pontos_gastos).toFixed(2)} pts</div>
+                <div class="resgate-meta">${data} · ${Number(r.pontos_gastos).toFixed(0)} pts</div>
             </div>
             <span class="pill ${sc}">${r.status}</span>
         </div>`;
     }).join("");
 }
 
-// ── Eventos ────────────────────────────────────────────────
-document.getElementById("btn-vincular")?.addEventListener("click", vincularComanda);
-document.getElementById("comanda-input")?.addEventListener("keydown", e => {
-    if (e.key === "Enter") vincularComanda();
-});
-document.getElementById("btn-logout")?.addEventListener("click", logout);
-
 // ── Init ───────────────────────────────────────────────────
 preencherNome();
-mostrarComandaAtiva();
+gerenciarComandaAtiva(); // Chama a nova função via API
 carregarSaldo();
 carregarHistorico();
 carregarResgates();

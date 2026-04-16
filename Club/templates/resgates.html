@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Club · Meus Resgates</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<nav class="bottom-nav">
+    <a href="/dashboard"><span class="nav-icon">⬡</span>Início</a>
+    <a href="/catalogo"><span class="nav-icon">✦</span>Catálogo</a>
+    <a href="/placar"><span class="nav-icon">🏆</span>Placar</a>
+    <a href="/menu" class="active"><span class="nav-icon">☰</span>Menu</a>
+</nav>
+
+<div class="page">
+
+    <div class="topbar">
+        <a href="/menu" style="color:var(--text-sub); text-decoration:none; font-size:13px;">← Voltar</a>
+        <span class="topbar-logo" style="font-size:20px;">RESGATES</span>
+        <div></div>
+    </div>
+
+    <div class="section" style="padding-bottom:100px;">
+        <div id="resgates-lista">
+            <div class="skeleton" style="height:80px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+            <div class="skeleton" style="height:80px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+            <div class="skeleton" style="height:80px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+        </div>
+
+        <div style="text-align:center; margin-top:24px;">
+            <a href="/catalogo" class="btn btn-gold">✦ Novo Resgate</a>
+        </div>
+    </div>
+
+</div>
+
+<script type="module">
+import { apiRequest } from "/static/js/api.js";
+import { verificarAuth } from "/static/js/auth.js";
+
+verificarAuth();
+
+async function carregarResgates() {
+    const c   = document.getElementById("resgates-lista");
+    const res = await apiRequest("/api/resgates/usuario");
+
+    if (!res.ok || !res.resgates.length) {
+        c.innerHTML = `
+            <p class="text-sub text-center" style="padding:40px 0;">
+                Nenhum resgate ainda.<br>
+                <a href="/catalogo" style="color:var(--gold);">Ir ao catálogo →</a>
+            </p>`;
+        return;
+    }
+
+    c.innerHTML = res.resgates.map(r => {
+        const data = new Date(r.data_criacao).toLocaleDateString("pt-BR", {
+            day: "2-digit", month: "short", year: "numeric"
+        });
+        const hora = new Date(r.data_criacao).toLocaleTimeString("pt-BR", {
+            hour: "2-digit", minute: "2-digit"
+        });
+        const statusCls = r.status === "entregue" ? "pill-success" : "pill-gold";
+        const tipoCls   = r.tipo === "viagem"
+            ? "style='color:var(--info)'" : "style='color:var(--success)'";
+        const tipoLabel = r.tipo === "viagem" ? "🛍️ Para viagem" : "🍽️ Local";
+        const pts = Number(r.pontos_gastos);
+        const ptsStr = pts % 1 === 0 ? pts.toFixed(0) : pts.toFixed(2);
+        const imgEl = r.foto_url
+            ? `<img class="resgate-img" src="${r.foto_url}" alt="" onerror="this.style.display='none'">`
+            : `<div class="resgate-img" style="display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--surface3);">🎁</div>`;
+        return `
+        <div class="resgate-card" style="margin-bottom:10px; flex-direction:column; gap:0; padding:0; overflow:hidden;">
+            <div style="display:flex; align-items:center; gap:14px; padding:14px 16px;">
+                ${imgEl}
+                <div class="resgate-info">
+                    <div class="resgate-nome">${r.produto_nome}</div>
+                    <div class="resgate-meta">${data} às ${hora}</div>
+                    <div style="margin-top:4px; display:flex; gap:8px; align-items:center;">
+                        <span ${tipoCls} style="font-size:11px; font-weight:600;">${tipoLabel}</span>
+                        <span class="pill ${statusCls}" style="font-size:10px;">${r.status}</span>
+                    </div>
+                </div>
+                <div style="font-family:var(--font-mono); font-size:14px; color:var(--danger); flex-shrink:0;">
+                    -${ptsStr}<br>
+                    <span style="font-size:10px; color:var(--text-dim);">pts</span>
+                </div>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+carregarResgates();
+</script>
+
+</body>
+</html>

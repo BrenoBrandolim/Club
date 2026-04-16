@@ -111,13 +111,15 @@
 
         <!-- Área de substituição (aparece só se item já está na comanda) -->
         <div id="substituicao-area" class="substituicao-box" style="display:none;">
-            <p>⚠ Este item já está na sua comanda como item pago.</p>
+            <p>
+                ⚠ Este item já está na sua comanda (Valor: <strong id="preco-item-caixa" style="color:var(--text)">R$ 0,00</strong>).
+            </p>
             <label class="substituicao-check">
                 <input type="checkbox" id="check-substituir">
-                <span>Substituir item pago por resgate de pontos</span>
+                <span>Trocar item pago por pontos (Grátis)</span>
             </label>
             <p style="font-size:11px; color:var(--text-sub); margin-top:8px; margin-bottom:0;">
-                Se aceitar, o item pago será removido e o crédito ajustado.
+                Ao marcar, o valor de <span id="preco-item-caixa-desc">R$ 0,00</span> será removido da sua conta.
             </p>
         </div>
 

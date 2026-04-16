@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Club · Histórico de Pontos</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<nav class="bottom-nav">
+    <a href="/dashboard"><span class="nav-icon">⬡</span>Início</a>
+    <a href="/catalogo"><span class="nav-icon">✦</span>Catálogo</a>
+    <a href="/placar"><span class="nav-icon">🏆</span>Placar</a>
+    <a href="/menu" class="active"><span class="nav-icon">☰</span>Menu</a>
+</nav>
+
+<div class="page">
+
+    <div class="topbar">
+        <a href="/menu" style="color:var(--text-sub); text-decoration:none; font-size:13px;">← Voltar</a>
+        <span class="topbar-logo" style="font-size:20px;">HISTÓRICO</span>
+        <div></div>
+    </div>
+
+    <!-- Resumo de saldo -->
+    <div class="section">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="card" style="padding:16px; text-align:center;">
+                <div style="font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase;
+                            color:var(--success); margin-bottom:6px;">Total Ganho</div>
+                <div style="font-family:var(--font-mono); font-size:22px; color:var(--success);"
+                     id="total-ganho">—</div>
+                <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">pts</div>
+            </div>
+            <div class="card" style="padding:16px; text-align:center;">
+                <div style="font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase;
+                            color:var(--danger); margin-bottom:6px;">Total Gasto</div>
+                <div style="font-family:var(--font-mono); font-size:22px; color:var(--danger);"
+                     id="total-gasto">—</div>
+                <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">pts</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtro -->
+    <div class="section" style="padding-top:0;">
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-gold btn-sm" id="filtro-todos" onclick="filtrar('todos')">Tudo</button>
+            <button class="btn btn-ghost btn-sm" id="filtro-ganho" onclick="filtrar('ganho')" style="color:var(--success); border-color:rgba(91,166,50,0.3);">⬆ Ganhos</button>
+            <button class="btn btn-ghost btn-sm" id="filtro-gasto" onclick="filtrar('gasto')" style="color:var(--danger); border-color:rgba(224,48,48,0.3);">⬇ Gastos</button>
+        </div>
+    </div>
+
+    <!-- Lista completa -->
+    <div class="section" style="padding-top:0; padding-bottom:100px;">
+        <div class="card" style="padding:0 16px;">
+            <div id="historico-lista">
+                <div class="skeleton" style="height:60px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:60px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:60px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:60px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:60px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module">
+import { apiRequest } from "/static/js/api.js";
+import { verificarAuth } from "/static/js/auth.js";
+
+verificarAuth();
+
+let todosMov = [];
+
+async function carregar() {
+    const res = await apiRequest("/api/pontos/historico");
+    if (!res.ok) return;
+
+    todosMov = res.historico;
+
+    const ganhos = todosMov.filter(h => h.tipo === "ganho").reduce((s, h) => s + Number(h.valor), 0);
+    const gastos = todosMov.filter(h => h.tipo === "gasto").reduce((s, h) => s + Number(h.valor), 0);
+
+    document.getElementById("total-ganho").textContent = ganhos.toFixed(2).replace(".", ",");
+    document.getElementById("total-gasto").textContent = gastos.toFixed(2).replace(".", ",");
+
+    renderLista(todosMov);
+}
+
+function renderLista(lista) {
+    const c = document.getElementById("historico-lista");
+    if (!lista.length) {
+        c.innerHTML = `<p class="text-sub text-center" style="padding:24px 0;">Nenhuma movimentação.</p>`;
+        return;
+    }
+    c.innerHTML = lista.map(h => {
+        const ganho = h.tipo === "ganho";
+        const data  = new Date(h.data_criacao).toLocaleDateString("pt-BR", {
+            day:"2-digit", month:"short", year:"numeric"
+        });
+        const pts = Number(h.valor);
+        const ptsStr = pts % 1 === 0 ? pts.toFixed(0) : pts.toFixed(2);
+        return `
+        <div class="historico-item">
+            <div class="historico-icon ${h.tipo}">${ganho ? "⬆" : "⬇"}</div>
+            <div class="historico-desc">
+                <div class="desc">${h.descricao || "Movimentação"}</div>
+                <div class="data">${data}</div>
+            </div>
+            <div class="historico-valor ${h.tipo}">${ganho ? "+" : "-"}${ptsStr} pts</div>
+        </div>`;
+    }).join("");
+}
+
+window.filtrar = function(tipo) {
+    document.querySelectorAll(".btn").forEach(b => b.classList.remove("btn-gold"));
+    document.getElementById("filtro-" + tipo)?.classList.add("btn-gold");
+    const lista = tipo === "todos" ? todosMov : todosMov.filter(h => h.tipo === tipo);
+    renderLista(lista);
+};
+
+carregar();
+</script>
+
+</body>
+</html>

@@ -5,26 +5,27 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
-/* ── Variáveis ─────────────────────────────────────────────── */
+/* ── Variáveis — Comenza Food ───────────────────────────────── */
 :root {
-  --bg:          #0a0a0c;
-  --surface:     #111116;
-  --surface2:    #18181f;
-  --surface3:    #22222c;
+  --bg:          #0d0b09;
+  --surface:     #141210;
+  --surface2:    #1c1915;
+  --surface3:    #26221c;
   --border:      rgba(255,255,255,0.07);
-  --border-glow: rgba(212,175,55,0.35);
+  --border-glow: rgba(232,100,30,0.40);
 
-  --gold:        #d4af37;
-  --gold-light:  #f0d060;
-  --gold-dim:    rgba(212,175,55,0.15);
-  --gold-glow:   0 0 24px rgba(212,175,55,0.25);
+  /* Paleta Comenza: laranja-vermelho primário */
+  --gold:        #e8641e;
+  --gold-light:  #f5891a;
+  --gold-dim:    rgba(232,100,30,0.14);
+  --gold-glow:   0 0 24px rgba(232,100,30,0.28);
 
-  --text:        #f0ede8;
-  --text-sub:    #8a8790;
-  --text-dim:    #4a4850;
+  --text:        #f5f0ea;
+  --text-sub:    #8a8278;
+  --text-dim:    #4a453e;
 
-  --success:     #2ecc71;
-  --danger:      #e74c3c;
+  --success:     #5ba632;
+  --danger:      #e03030;
   --info:        #3498db;
 
   --radius-sm:   10px;
@@ -164,13 +165,13 @@ h3 { font-size: 20px; }
 
 /* ── Card de saldo (hero) ───────────────────────────────────── */
 .saldo-card {
-  background: linear-gradient(135deg, #1a1608 0%, #241d0a 40%, #1a1608 100%);
+  background: linear-gradient(135deg, #180e06 0%, #221408 40%, #180e06 100%);
   border: 1px solid var(--border-glow);
   border-radius: var(--radius-xl);
   padding: 28px 24px;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--gold-glow), inset 0 1px 0 rgba(212,175,55,0.2);
+  box-shadow: var(--gold-glow), inset 0 1px 0 rgba(232,100,30,0.2);
 }
 
 .saldo-card::before {
@@ -633,11 +634,11 @@ h3 { font-size: 20px; }
 }
 
 .auth-page::before {
-  content: 'CLUB';
+  content: 'COMENZA';
   font-family: var(--font-display);
-  font-size: 200px;
-  letter-spacing: 20px;
-  color: rgba(212,175,55,0.03);
+  font-size: 120px;
+  letter-spacing: 16px;
+  color: rgba(232,100,30,0.04);
   position: absolute;
   top: 50%;
   left: 50%;

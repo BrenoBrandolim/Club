@@ -117,3 +117,31 @@ def buscar_comanda_vinculada_usuario_db(usuario_id: int) -> dict | None:
     finally:
         cursor.close()
         conn.close()
+
+def buscar_ranking_db(limite: int = 10) -> list:
+    """
+    Top N usuários por pontos GANHOS totais (não deduz gastos).
+    Ranking baseia-se apenas em pontos acumulados históricos.
+    """
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT
+                u.id,
+                u.nome,
+                u.nickname,
+                COALESCE(SUM(p.valor), 0) AS pontos_ganhos
+            FROM usuarios u
+            LEFT JOIN pontos p ON p.usuario_id = u.id AND p.tipo = 'ganho'
+            GROUP BY u.id, u.nome, u.nickname
+            ORDER BY pontos_ganhos DESC
+            LIMIT %s
+            """,
+            (limite,),
+        )
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()

@@ -31,6 +31,23 @@ def dashboard_page(): return render_template("dashboard.html")
 @app.route("/catalogo")
 def catalogo_page():  return render_template("catalogo.html")
 
+# ── NOVAS ROTAS ADICIONADAS ──────────────────────────────
+@app.route("/menu")
+def menu_page():      
+    return render_template("menu.html")
+
+@app.route("/placar")
+def placar_page():     
+    return render_template("placar.html")
+
+@app.route("/historico")
+def historico_page():  
+    return render_template("historico.html")
+
+@app.route("/resgates")
+def resgates_page():   
+    return render_template("resgates.html")
+
 @app.route("/comanda/<int:numero>")
 def comanda_page(numero):
     """Landing page do QR Code. Flask passa o número para o Jinja."""

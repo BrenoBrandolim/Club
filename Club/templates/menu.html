@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Club · Menu</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: var(--text);
+            transition: var(--transition);
+        }
+        .menu-item:hover { border-color: var(--border-glow); background: var(--surface2); }
+        .menu-item:active { transform: scale(0.99); }
+
+        .menu-icon {
+            width: 44px; height: 44px;
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            background: var(--surface2);
+            flex-shrink: 0;
+        }
+        .menu-item-info { flex: 1; }
+        .menu-item-titulo { font-size: 15px; font-weight: 600; }
+        .menu-item-sub    { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+        .menu-item-arrow  { color: var(--text-dim); font-size: 16px; }
+
+        .menu-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            padding: 16px 4px 8px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="bottom-nav">
+    <a href="/dashboard"><span class="nav-icon">⬡</span>Início</a>
+    <a href="/catalogo"><span class="nav-icon">✦</span>Catálogo</a>
+    <a href="/placar"><span class="nav-icon">🏆</span>Placar</a>
+    <a href="/menu" class="active"><span class="nav-icon">☰</span>Menu</a>
+</nav>
+
+<div class="page">
+
+    <!-- Logo Comenza -->
+    <div style="padding: 24px 20px 16px; display:flex; align-items:center; justify-content:space-between;">
+        <div>
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRrESNU9fNm-eOGSmBkWMvKDjh-0cB7ElKlCg&s"
+                 alt="Comenza" style="height:40px; object-fit:contain; border-radius:8px;"
+                 onerror="this.style.display='none'">
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:14px; font-weight:600;" id="menu-nome">—</div>
+            <div style="font-size:11px; color:var(--text-dim);" id="menu-saldo">— pts</div>
+        </div>
+    </div>
+
+    <div style="padding: 0 20px 100px;">
+
+        <!-- Atividade -->
+        <div class="menu-section-label">Atividade</div>
+
+        <a href="/resgates" class="menu-item">
+            <div class="menu-icon" style="background:rgba(232,100,30,0.12);">🎁</div>
+            <div class="menu-item-info">
+                <div class="menu-item-titulo">Meus Resgates</div>
+                <div class="menu-item-sub">Histórico completo de resgates</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+        </a>
+
+        <a href="/historico" class="menu-item">
+            <div class="menu-icon" style="background:rgba(91,166,50,0.12);">📊</div>
+            <div class="menu-item-info">
+                <div class="menu-item-titulo">Histórico de Pontos</div>
+                <div class="menu-item-sub">Ganhos e gastos de pontos</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+        </a>
+
+        <!-- Rankings -->
+        <div class="menu-section-label">Competição</div>
+
+        <a href="/placar" class="menu-item">
+            <div class="menu-icon" style="background:rgba(232,100,30,0.12);">🏆</div>
+            <div class="menu-item-info">
+                <div class="menu-item-titulo">Placar</div>
+                <div class="menu-item-sub">Top 10 clientes com mais pontos</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+        </a>
+
+        <!-- Resgatar -->
+        <div class="menu-section-label">Loja</div>
+
+        <a href="/catalogo" class="menu-item">
+            <div class="menu-icon" style="background:var(--gold-dim);">✦</div>
+            <div class="menu-item-info">
+                <div class="menu-item-titulo">Catálogo de Produtos</div>
+                <div class="menu-item-sub">Troque seus pontos por produtos</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+        </a>
+
+        <!-- Conta -->
+        <div class="menu-section-label">Conta</div>
+
+        <a href="#" class="menu-item" id="btn-menu-logout"
+           style="border-color:rgba(224,48,48,0.2); color:var(--danger);">
+            <div class="menu-icon" style="background:rgba(224,48,48,0.1);">↩</div>
+            <div class="menu-item-info">
+                <div class="menu-item-titulo" style="color:var(--danger);">Sair da conta</div>
+                <div class="menu-item-sub">Encerrar sessão</div>
+            </div>
+        </a>
+
+    </div>
+
+</div>
+
+<script type="module">
+import { apiRequest, getUser } from "/static/js/api.js";
+import { verificarAuth, logout } from "/static/js/auth.js";
+
+verificarAuth();
+
+const user = getUser();
+if (user.nome) document.getElementById("menu-nome").textContent = user.nome;
+
+apiRequest("/api/pontos/saldo").then(res => {
+    if (res.ok) {
+        const pts = Number(res.saldo);
+        document.getElementById("menu-saldo").textContent =
+            (pts % 1 === 0 ? pts.toFixed(0) : pts.toFixed(2)) + " pts disponíveis";
+    }
+});
+
+document.getElementById("btn-menu-logout").addEventListener("click", e => {
+    e.preventDefault();
+    logout();
+});
+</script>
+
+</body>
+</html>
