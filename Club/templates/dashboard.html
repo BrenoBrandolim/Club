@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Club · Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<nav class="bottom-nav">
+    <a href="/dashboard" class="active"><span class="nav-icon">⬡</span>Início</a>
+    <a href="/catalogo"><span class="nav-icon">✦</span>Catálogo</a>
+    <a href="#" id="btn-logout"><span class="nav-icon">↩</span>Sair</a>
+</nav>
+
+<div class="page">
+
+    <div class="topbar">
+        <span class="topbar-logo">CLUB <span>✦</span></span>
+        <div>
+            <div style="font-size:13px; color:var(--text-sub); text-align:right;" id="user-nome">—</div>
+            <div style="font-size:11px; color:var(--text-dim); text-align:right;" id="user-nickname">—</div>
+        </div>
+    </div>
+
+    <!-- Card de saldo -->
+    <div class="section">
+        <div class="saldo-card">
+            <div class="saldo-label">Seus Pontos</div>
+            <div class="saldo-valor" id="saldo-valor">0</div>
+            <div class="saldo-unidade">pontos disponíveis</div>
+            <a href="/catalogo" class="btn btn-gold btn-sm" style="margin-top:20px; display:inline-flex;">
+                ✦ Ver Catálogo
+            </a>
+        </div>
+    </div>
+
+    <!-- Comanda ativa (banner condicional) -->
+    <div class="section" style="padding-top:0;" id="comanda-ativa-section" style="display:none;">
+        <!-- Preenchido pelo JS se houver comanda ativa -->
+    </div>
+
+    <!-- Vincular comanda -->
+    <div class="section" style="padding-top:0;">
+        <div class="card" style="padding:20px;">
+            <div class="section-header" style="margin-bottom:14px;">
+                <span class="section-title" style="font-size:18px;">Vincular Comanda</span>
+                <span class="label" style="color:var(--gold);">+PONTOS</span>
+            </div>
+            <p class="text-sub" style="margin-bottom:14px;">
+                Informe o número da sua comanda para ganhar pontos ao fechar a conta.
+            </p>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="comanda-input" placeholder="Nº da comanda"
+                       style="flex:1; background:var(--surface2); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:16px;
+                              padding:12px 14px; outline:none; font-family:var(--font);">
+                <button class="btn btn-gold" id="btn-vincular">Vincular</button>
+            </div>
+            <p style="font-size:11px; color:var(--text-dim); margin-top:10px; text-align:center;">
+                Ou acesse <strong>/comanda/[número]</strong> pelo QR da sua mesa
+            </p>
+        </div>
+    </div>
+
+    <!-- Resgates recentes -->
+    <div class="section" style="padding-top:0;">
+        <div class="section-header">
+            <span class="section-title" style="font-size:18px;">Resgates</span>
+            <a href="/catalogo" style="color:var(--gold); font-size:12px; text-decoration:none; font-weight:600;">Novo resgate →</a>
+        </div>
+        <div id="resgates-lista">
+            <div class="skeleton" style="height:72px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+            <div class="skeleton" style="height:72px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+        </div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="section" style="padding-top:0; padding-bottom:100px;">
+        <div class="section-header">
+            <span class="section-title" style="font-size:18px;">Histórico</span>
+        </div>
+        <div class="card" style="padding:0 16px;">
+            <div id="historico-lista">
+                <div class="skeleton" style="height:54px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:54px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:54px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module" src="/static/js/dashboard.js"></script>
+</body>
+</html>

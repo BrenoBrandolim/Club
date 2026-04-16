@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Club · Entrar</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="auth-page">
+
+    <div class="auth-logo">CLUB</div>
+    <p class="auth-sub">Sistema de Fidelidade</p>
+
+    <div class="auth-form">
+        <div class="form-group">
+            <label>Nickname</label>
+            <input type="text" id="nickname" placeholder="seu_nickname" autocomplete="username"
+                   autocapitalize="none" spellcheck="false">
+        </div>
+
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button class="btn btn-gold btn-full btn-lg mt-24" id="btn-login">
+            Entrar
+        </button>
+
+        <div class="auth-footer mt-16">
+            Não tem conta? <a href="/cadastro">Criar agora</a>
+        </div>
+    </div>
+
+</div>
+
+<script type="module">
+import { login } from "/static/js/auth.js";
+
+const btnLogin  = document.getElementById("btn-login");
+const inputNick = document.getElementById("nickname");
+const inputSen  = document.getElementById("senha");
+
+async function fazerLogin() {
+    const nick = inputNick.value.trim();
+    const sen  = inputSen.value;
+    if (!nick || !sen) return;
+
+    btnLogin.disabled = true;
+    btnLogin.textContent = "Entrando…";
+
+    await login(nick, sen);
+
+    btnLogin.disabled = false;
+    btnLogin.textContent = "Entrar";
+}
+
+btnLogin.addEventListener("click", fazerLogin);
+inputSen.addEventListener("keydown", e => { if (e.key === "Enter") fazerLogin(); });
+inputNick.addEventListener("keydown", e => { if (e.key === "Enter") inputSen.focus(); });
+</script>
+
+</body>
+</html>

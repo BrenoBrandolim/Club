@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Club · Catálogo</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .produto-card-sem-pontos { opacity:0.55; }
+        .produto-card-sem-pontos:hover { transform:none; box-shadow:none; border-color:var(--border); }
+
+        /* Seletor local / viagem */
+        .tipo-selector { display:flex; gap:8px; margin-bottom:8px; }
+        .tipo-option   { flex:1; }
+        .tipo-option input { display:none; }
+        .tipo-option label {
+            display:flex; align-items:center; justify-content:center; gap:6px;
+            padding:10px; border:1px solid var(--border); border-radius:var(--radius-md);
+            cursor:pointer; font-size:13px; font-weight:600; color:var(--text-sub);
+            transition:all .18s;
+        }
+        .tipo-option input:checked + label {
+            border-color:var(--gold); background:var(--gold-dim); color:var(--gold);
+        }
+
+        /* Área de substituição */
+        .substituicao-box {
+            background:rgba(212,175,55,0.08);
+            border:1px solid var(--border-glow);
+            border-radius:var(--radius-md);
+            padding:14px 16px;
+            margin-bottom:14px;
+        }
+        .substituicao-box p { font-size:13px; color:var(--gold); margin-bottom:10px; }
+        .substituicao-check { display:flex; align-items:center; gap:10px; cursor:pointer; }
+        .substituicao-check input { accent-color:var(--gold); width:16px; height:16px; }
+        .substituicao-check span { font-size:13px; font-weight:600; color:var(--text); }
+    </style>
+</head>
+<body>
+
+<nav class="bottom-nav">
+    <a href="/dashboard"><span class="nav-icon">⬡</span>Início</a>
+    <a href="/catalogo" class="active"><span class="nav-icon">✦</span>Catálogo</a>
+    <a href="#" onclick="import('/static/js/auth.js').then(m=>m.logout())">
+        <span class="nav-icon">↩</span>Sair
+    </a>
+</nav>
+
+<div class="page-wide">
+
+    <div style="padding:20px 0 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div>
+            <h2 style="font-family:var(--font-display); font-size:32px; letter-spacing:3px; color:var(--text);">CATÁLOGO</h2>
+            <p class="text-sub">Troque seus pontos por produtos exclusivos</p>
+        </div>
+        <div style="background:var(--gold-dim); border:1px solid var(--border-glow);
+                    border-radius:50px; padding:10px 20px; display:flex; align-items:center; gap:8px;">
+            <span style="color:var(--gold); font-size:16px;">✦</span>
+            <span style="font-family:var(--font-mono); font-size:16px; color:var(--gold-light);" id="saldo-topo">— pts</span>
+        </div>
+    </div>
+
+    <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="busca" placeholder="Buscar produto…">
+    </div>
+
+    <div class="produto-grid" id="produto-grid"></div>
+
+</div>
+
+<!-- ─── Modal de resgate ─────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <div class="modal-handle"></div>
+
+        <img class="modal-produto-img" id="modal-img" src="" alt="" style="display:none;">
+        <div class="modal-produto-nome" id="modal-nome">—</div>
+        <div class="modal-pontos">
+            <span id="modal-pontos">0</span><span> pts</span>
+        </div>
+
+        <!-- Aviso: pontos insuficientes -->
+        <div id="modal-aviso" style="display:none; background:rgba(231,76,60,0.1);
+             border:1px solid rgba(231,76,60,0.3); border-radius:var(--radius-sm);
+             padding:12px 16px; margin-bottom:16px; font-size:13px; color:var(--danger);">
+            ⚠ Saldo: <strong id="modal-saldo">0</strong> pts — insuficiente.
+        </div>
+
+        <!-- Número da comanda -->
+        <div class="form-group">
+            <label>Número da comanda</label>
+            <input type="number" id="comanda-resgate" placeholder="Ex: 42" min="1">
+        </div>
+
+        <!-- Seletor: consumo local / viagem -->
+        <div style="margin-bottom:14px;">
+            <div class="label" style="margin-bottom:8px;">Tipo de consumo</div>
+            <div class="tipo-selector">
+                <div class="tipo-option">
+                    <input type="radio" name="tipo_consumo" id="tipo-local" value="local" checked>
+                    <label for="tipo-local">🍽️ Consumo local</label>
+                </div>
+                <div class="tipo-option">
+                    <input type="radio" name="tipo_consumo" id="tipo-viagem" value="viagem">
+                    <label for="tipo-viagem">🛍️ Para viagem</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de substituição (aparece só se item já está na comanda) -->
+        <div id="substituicao-area" class="substituicao-box" style="display:none;">
+            <p>⚠ Este item já está na sua comanda como item pago.</p>
+            <label class="substituicao-check">
+                <input type="checkbox" id="check-substituir">
+                <span>Substituir item pago por resgate de pontos</span>
+            </label>
+            <p style="font-size:11px; color:var(--text-sub); margin-top:8px; margin-bottom:0;">
+                Se aceitar, o item pago será removido e o crédito ajustado.
+            </p>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:8px;">
+            <button class="btn btn-ghost" id="btn-fechar-modal" style="flex:1;">Cancelar</button>
+            <button class="btn btn-gold" id="btn-confirmar-resgate" style="flex:2;"
+                    data-substituir="false" data-comanda-item-id="">
+                ✦ Resgatar Agora
+            </button>
+        </div>
+
+        <p style="font-size:11px; color:var(--text-dim); text-align:center; margin-top:14px;">
+            O produto será adicionado automaticamente à sua comanda.
+        </p>
+    </div>
+</div>
+
+<script type="module" src="/static/js/catalogo.js"></script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Club · Comanda</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .comanda-hero {
+            text-align: center;
+            padding: 48px 24px 32px;
+        }
+        .comanda-numero {
+            font-family: var(--font-display);
+            font-size: 96px;
+            letter-spacing: 8px;
+            color: var(--gold-light);
+            line-height: 1;
+            text-shadow: 0 0 40px rgba(212,175,55,0.3);
+        }
+        .comanda-numero-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold);
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 16px;
+        }
+        .status-aberta  { background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.3); color: var(--success); }
+        .status-fechada { background: rgba(231,76,60,0.12);  border: 1px solid rgba(231,76,60,0.3);  color: var(--danger);  }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.3); } }
+        .status-loading { background: var(--surface2); border: 1px solid var(--border); color: var(--text-sub); }
+
+        .action-area {
+            padding: 0 24px 100px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .info-card p { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+        .info-card strong { color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<!-- Topbar minimal -->
+<div style="padding: 20px 24px; display:flex; align-items:center; justify-content:space-between;">
+    <a href="/" style="font-family:var(--font-display); font-size:22px; letter-spacing:3px; color:var(--gold); text-decoration:none;">CLUB</a>
+    <a href="/dashboard" id="link-dashboard" style="display:none; color:var(--text-sub); font-size:13px; text-decoration:none;">Meu painel →</a>
+</div>
+
+<!-- Hero com número da comanda -->
+<div class="comanda-hero">
+    <div class="comanda-numero-label">Comanda</div>
+    <div class="comanda-numero" id="numero-display">{{ numero_comanda }}</div>
+
+    <div id="status-container">
+        <span class="status-badge status-loading">
+            <span class="status-dot" style="animation:none; opacity:.5;"></span>
+            Verificando…
+        </span>
+    </div>
+</div>
+
+<!-- Área de ação dinâmica -->
+<div class="action-area">
+    <div id="area-acao">
+        <!-- Preenchido pelo JS -->
+        <div class="skeleton" style="height:56px; border-radius:var(--radius-md); margin-bottom:12px;"></div>
+        <div class="skeleton" style="height:80px; border-radius:var(--radius-md);"></div>
+    </div>
+</div>
+
+<script type="module">
+import { getToken, getUser, setToken, setUser, apiRequest } from "/static/js/api.js";
+import { toastSuccess, toastError, toastGold } from "/static/js/toast.js";
+
+const NUMERO = {{ numero_comanda }};
+const token  = getToken();
+const user   = getUser();
+
+// Salva sempre o número em localStorage (contexto que sobrevive ao login)
+localStorage.setItem("club_numero_comanda", NUMERO);
+
+// Mostra link pro dashboard se logado
+if (token) {
+    document.getElementById("link-dashboard").style.display = "block";
+}
+
+// ── Atualiza badge de status ────────────────────────────────
+function setStatus(texto, classe) {
+    document.getElementById("status-container").innerHTML = `
+        <span class="status-badge ${classe}">
+            <span class="status-dot"></span>
+            ${texto}
+        </span>`;
+}
+
+// ── Renderiza a área de ação com base no contexto ─────────
+function renderAcao(comanda) {
+    const area = document.getElementById("area-acao");
+
+    if (!comanda.aberta) {
+        setStatus("Encerrada", "status-fechada");
+        area.innerHTML = `
+            <div class="info-card">
+                <p>Esta comanda já foi <strong>encerrada</strong>. Peça ao atendente para abrir uma nova comanda e escaneie o QR novamente.</p>
+            </div>
+            <a href="/catalogo" class="btn btn-outline btn-full" style="text-align:center;">Ver Catálogo</a>`;
+        return;
+    }
+
+    setStatus("Aberta", "status-aberta");
+
+    if (!token) {
+        // Não logado → botões de login/cadastro
+        area.innerHTML = `
+            <div class="info-card">
+                <p>Para vincular esta comanda à sua conta e <strong>ganhar pontos</strong>, faça login ou crie sua conta gratuita.</p>
+            </div>
+            <a href="/login" class="btn btn-gold btn-full btn-lg" style="text-align:center; margin-bottom:10px;">
+                Entrar na minha conta
+            </a>
+            <a href="/cadastro" class="btn btn-outline btn-full" style="text-align:center;">
+                Criar conta grátis
+            </a>`;
+        return;
+    }
+
+    // Logado → botão vincular
+    area.innerHTML = `
+        <div class="info-card">
+            <p>Olá, <strong>${user.nome || "visitante"}</strong>! Vincule a comanda <strong>#${NUMERO}</strong> para ganhar pontos automaticamente ao fechar a conta.</p>
+        </div>
+        <button class="btn btn-gold btn-full btn-lg" id="btn-vincular">
+            ✦ Vincular esta comanda
+        </button>
+        <a href="/catalogo" class="btn btn-ghost btn-full" style="text-align:center; margin-top:10px;">
+            Ver catálogo →
+        </a>`;
+
+    document.getElementById("btn-vincular").addEventListener("click", vincularComanda);
+}
+
+// ── Vincular comanda ────────────────────────────────────────
+async function vincularComanda() {
+    const btn = document.getElementById("btn-vincular");
+    btn.disabled = true;
+    btn.textContent = "Vinculando…";
+
+    const res = await apiRequest(`/api/comanda/${NUMERO}/vincular`, "POST");
+
+    if (res.ok) {
+        toastGold(`✦ Comanda #${NUMERO} vinculada! Pontos serão creditados ao fechar.`);
+        document.getElementById("area-acao").innerHTML = `
+            <div class="info-card" style="border-color:var(--border-glow);">
+                <p style="color:var(--gold);">✦ Comanda <strong>#${NUMERO}</strong> vinculada com sucesso!</p>
+                <p style="margin-top:8px;">Seus pontos serão creditados automaticamente quando a conta for fechada.</p>
+            </div>
+            <a href="/catalogo" class="btn btn-gold btn-full btn-lg" style="text-align:center; margin-bottom:10px;">
+                ✦ Resgatar produtos
+            </a>
+            <a href="/dashboard" class="btn btn-ghost btn-full" style="text-align:center;">
+                Ver meu painel
+            </a>`;
+        // Salva comanda ativa para pré-preencher catálogo
+        localStorage.setItem("club_numero_comanda", NUMERO);
+    } else {
+        toastError(res.message || "Erro ao vincular");
+        btn.disabled = false;
+        btn.textContent = "✦ Vincular esta comanda";
+    }
+}
+
+// ── Restaura contexto pós-login ─────────────────────────────
+// Se chegou aqui após login (parâmetro redirect), já tem token
+// e o número está em localStorage.
+const params = new URLSearchParams(window.location.search);
+if (params.get("auto_vincular") === "1" && token) {
+    // Vincula automaticamente após login
+    setTimeout(vincularComanda, 600);
+}
+
+// ── Init ─────────────────────────────────────────────────────
+async function init() {
+    try {
+        const res = await fetch(`/api/comanda/${NUMERO}`, {
+            headers: { "x-api-key": "" }  // sem key — endpoint público
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+            renderAcao(data);
+        } else {
+            setStatus("Não encontrada", "status-fechada");
+            document.getElementById("area-acao").innerHTML = `
+                <div class="info-card">
+                    <p>Comanda <strong>#${NUMERO}</strong> não encontrada ou já encerrada.</p>
+                </div>`;
+        }
+    } catch (e) {
+        setStatus("Erro de conexão", "status-fechada");
+        document.getElementById("area-acao").innerHTML = `
+            <div class="info-card">
+                <p>Não foi possível verificar a comanda. Tente novamente.</p>
+            </div>
+            <button class="btn btn-ghost btn-full" onclick="location.reload()">Tentar novamente</button>`;
+    }
+}
+
+init();
+</script>
+
+</body>
+</html>
