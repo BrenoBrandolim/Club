@@ -15,13 +15,16 @@ let comandaAtivaGlobal = ""; // Armazena a comanda vinculada para preenchimento 
 const style = document.createElement('style');
 style.innerHTML = `
     .btn-loading-state {
-        background: linear-gradient(90deg, #ff8c00 0%, #ff8c00 50%, #b26200 50%, #b26200 100%);
+        /* Transição entre o Vinho base e um Vinho mais iluminado */
+        background: linear-gradient(90deg, var(--wine) 0%, var(--wine) 50%, var(--wine-light) 50%, var(--wine-light) 100%);
         background-size: 200% 100%;
         background-position: 100% 0;
         animation: loading-fill 3.5s forwards;
-        color: white !important;
+        color: white !important; 
+        font-weight: 600;
         pointer-events: none;
         border: none;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
     }
     @keyframes loading-fill {
         from { background-position: 100% 0; }

@@ -2,7 +2,7 @@
 
 import { apiRequest, getUser } from "./api.js";
 import { verificarAuth, logout } from "./auth.js";
-import { toastError, toastSuccess, toastGold } from "./toast.js";
+import { toastError, toastGold } from "./toast.js";
 
 verificarAuth();
 const user = getUser();
@@ -15,7 +15,7 @@ function preencherNome() {
     if (k && user.nickname) k.textContent = "@" + user.nickname;
 }
 
-// ── Saldo (Com animação original) ──────────────────────────────
+// ── Saldo (animação) ──────────────────────────────────────────
 async function carregarSaldo() {
     const res = await apiRequest("/api/pontos/saldo");
     if (res.ok) {
@@ -36,47 +36,48 @@ function animarNumero(el, de, para, ms) {
     requestAnimationFrame(tick);
 }
 
-// ── Comanda Ativa (Agora via API - Sem localStorage manual) ──
+// ── Comanda Ativa ─────────────────────────────────────────────
+// BUG FIX: API retorna res.comanda (não res.ativa) e res.comanda.numero (não res.numero_comanda)
 async function gerenciarComandaAtiva() {
     const secAtiva = document.getElementById("comanda-ativa-section");
     const secSem   = document.getElementById("sem-comanda-section");
-    
     if (!secAtiva || !secSem) return;
 
-    // Busca no servidor se há uma comanda aberta para este CPF/ID
     const res = await apiRequest("/api/comanda/ativa");
 
-    if (res.ok && res.ativa) {
-        secSem.style.display = "none";
-        secAtiva.innerHTML = `
-            <div class="card" style="padding:24px; border-color:var(--border-glow);
-                 background: linear-gradient(135deg, #1a1608 0%, #241d0a 100%);
-                 box-shadow: var(--gold-glow);">
-                <div style="display:flex; align-items:center; justify-content:space-between;">
-                    <div>
-                        <div class="label" style="color:var(--gold); margin-bottom:8px;">Comanda Ativa</div>
-                        <div style="font-family:var(--font-display); font-size:48px; color:var(--gold-light); line-height:1;">
-                            #${res.numero_comanda}
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="label">Mesa</div>
-                        <div style="font-size:20px; font-weight:600; color:var(--text);">${res.mesa || '--'}</div>
-                    </div>
-                </div>
-                <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:var(--text-sub);">Acumulando pontos automaticamente</span>
-                    <a href="/catalogo" class="btn btn-gold btn-sm">✦ Resgatar</a>
-                </div>
-            </div>`;
+    // FIX: verifica res.comanda (objeto), não res.ativa (boolean inexistente)
+    if (res.ok && res.comanda) {
+        const numero = res.comanda.numero;   // FIX: era res.numero_comanda
+        secSem.style.display   = "none";
         secAtiva.style.display = "block";
+    // Localize esta parte no seu dashboard.js e substitua o innerHTML:
+
+   secAtiva.innerHTML = `
+    <div class="comanda-card">
+        <div class="comanda-content">
+            <div class="comanda-badge">
+                <span class="comanda-label">Nº</span>
+                <span class="comanda-numero">${numero}</span>
+            </div>
+            <div class="comanda-info">
+                <div class="label-gold">Comanda Ativa</div>
+                <div class="comanda-status">Acumulando pontos automaticamente</div>
+            </div>
+            <a href="/catalogo" class="btn-resgate">✦ Resgatar</a>
+        </div>
+        ${res.aviso ? `
+            <div style="margin-top: 12px; color: var(--gold); font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 6px;">
+                <span>⚠️</span> ${res.aviso}
+            </div>` : ""}
+    </div>`;
+
     } else {
         secAtiva.style.display = "none";
-        secSem.style.display = "block";
+        secSem.style.display   = "block";
     }
 }
 
-// ── Histórico (Resumo para o Dashboard) ───────────────────────
+// ── Histórico (resumo — 3 últimas) ───────────────────────────
 async function carregarHistorico() {
     const c = document.getElementById("historico-lista");
     if (!c) return;
@@ -85,11 +86,10 @@ async function carregarHistorico() {
         c.innerHTML = `<p class="text-sub text-center" style="padding:24px 0;">Sem movimentações ainda.</p>`;
         return;
     }
-    // Mostra apenas as 3 últimas no dashboard
     c.innerHTML = res.historico.slice(0, 3).map(h => {
-        const ganho = h.tipo === "ganho";
-        const data  = new Date(h.data_criacao).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
-        const pts   = Number(h.valor);
+        const ganho  = h.tipo === "ganho";
+        const data   = new Date(h.data_criacao).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
+        const pts    = Number(h.valor);
         const ptsStr = pts.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
         return `
         <div class="historico-item">
@@ -103,7 +103,7 @@ async function carregarHistorico() {
     }).join("");
 }
 
-// ── Resgates Recentes ────────────────────────────────────────
+// ── Resgates recentes (2 últimos) ────────────────────────────
 async function carregarResgates() {
     const c = document.getElementById("resgates-lista");
     if (!c) return;
@@ -112,7 +112,6 @@ async function carregarResgates() {
         c.innerHTML = `<p class="text-sub text-center" style="padding:24px 0;">Nenhum resgate ainda.</p>`;
         return;
     }
-    // Mostra os 2 últimos no dashboard
     c.innerHTML = res.resgates.slice(0, 2).map(r => {
         const data = new Date(r.data_criacao).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
         const sc   = r.status === "entregue" ? "pill-success" : "pill-gold";
@@ -122,14 +121,14 @@ async function carregarResgates() {
                 <div class="resgate-nome">${r.produto_nome}</div>
                 <div class="resgate-meta">${data} · ${Number(r.pontos_gastos).toFixed(0)} pts</div>
             </div>
-            <span class="pill ${sc}">${r.status}</span>
         </div>`;
     }).join("");
 }
 
-// ── Init ───────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────
+document.getElementById("btn-logout")?.addEventListener("click", logout);
 preencherNome();
-gerenciarComandaAtiva(); // Chama a nova função via API
+gerenciarComandaAtiva();
 carregarSaldo();
 carregarHistorico();
 carregarResgates();
