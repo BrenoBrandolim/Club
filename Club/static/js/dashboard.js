@@ -50,27 +50,21 @@ async function gerenciarComandaAtiva() {
         const numero = res.comanda.numero;   // FIX: era res.numero_comanda
         secSem.style.display   = "none";
         secAtiva.style.display = "block";
-    // Localize esta parte no seu dashboard.js e substitua o innerHTML:
-
-   secAtiva.innerHTML = `
-    <div class="comanda-card">
-        <div class="comanda-content">
-            <div class="comanda-badge">
-                <span class="comanda-label">Nº</span>
-                <span class="comanda-numero">${numero}</span>
-            </div>
-            <div class="comanda-info">
-                <div class="label-gold">Comanda Ativa</div>
-                <div class="comanda-status">Acumulando pontos automaticamente</div>
-            </div>
-            <a href="/catalogo" class="btn-resgate">✦ Resgatar</a>
-        </div>
-        ${res.aviso ? `
-            <div style="margin-top: 12px; color: var(--gold); font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 6px;">
-                <span>⚠️</span> ${res.aviso}
-            </div>` : ""}
-    </div>`;
-
+        secAtiva.innerHTML = `
+            <div class="comanda-card">
+                <div class="comanda-content">
+                    <div class="comanda-badge">
+                        <span class="comanda-label">Nº</span>
+                        <span class="comanda-numero">${numero}</span>
+                    </div>
+                    <div class="comanda-info">
+                        <div class="label-gold">Comanda Ativa</div>
+                        <div class="comanda-status">Acumulando pontos automaticamente</div>
+                    </div>
+                    <a href="/catalogo" class="btn-resgate">✦ Resgatar</a>
+                </div>
+                ${res.aviso ? `<div style="margin-top:12px; font-size:10px; color:var(--amber); opacity:.7; display:flex; align-items:center; gap:5px;">⚠ ${res.aviso}</div>` : ""}
+            </div>`;
     } else {
         secAtiva.style.display = "none";
         secSem.style.display   = "block";
@@ -124,6 +118,7 @@ async function carregarResgates() {
         </div>`;
     }).join("");
 }
+
 
 // ── Init ──────────────────────────────────────────────────────
 document.getElementById("btn-logout")?.addEventListener("click", logout);

@@ -106,12 +106,12 @@
 <nav class="bottom-nav">
     <a href="/dashboard"><span class="nav-icon">⬡</span>Início</a>
     <a href="/catalogo"><span class="nav-icon">✦</span>Catálogo</a>
-    <a href="/placar" class="active"><span class="nav-icon">🏆</span>Placar</a>
+    <a href="/placar" class="active"><span class="nav-icon">✦</span>Placar</a>
     <a href="/menu"><span class="nav-icon">☰</span>Menu</a>
 </nav>
 
 <div class="placar-header">
-    <div style="font-size:48px; margin-bottom:8px;">🏆</div>
+    <div style="font-size:60px; margin-top:40px; margin-bottom:16px;">🏆</div>
     <div class="placar-title">PLACAR</div>
     <div class="placar-sub">Top 10 — Pontos ganhos</div>
 </div>
@@ -158,8 +158,7 @@ async function carregarRanking() {
         <div class="ranking-item ${classe}" style="${ehVoce ? 'border-color:var(--gold);' : ''}">
             ${posHTML}
             <div class="ranking-info">
-                <div class="ranking-nome">${r.nome} ${ehVoce ? '👈' : ''}</div>
-                <div class="ranking-nick">@${r.nickname}</div>
+                <div class="ranking-nome">@${r.nickname} ${ehVoce ? '👈' : ''}</div>
             </div>
             <div class="ranking-pts">
                 ${ptsStr}

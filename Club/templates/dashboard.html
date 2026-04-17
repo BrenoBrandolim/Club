@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Club · Dashboard</title>
+    <title>Club · Comenza Food</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
@@ -17,17 +17,16 @@
 
 <div class="page">
 
-    <!-- Topbar com logo Comenza -->
+    <!-- Topbar com logo -->
     <div class="topbar">
-        <div style="display:flex; align-items:center; gap:10px;">
+        <a class="topbar-logo" href="/dashboard">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRrESNU9fNm-eOGSmBkWMvKDjh-0cB7ElKlCg&s"
-                 alt="Comenza" style="height:32px; border-radius:6px; object-fit:contain;"
-                 onerror="this.style.display='none'">
-            <span class="topbar-logo" style="font-size:20px;">CLUB</span>
-        </div>
+                 alt="Comenza" onerror="this.style.display='none'">
+            CLUB
+        </a>
         <div>
-            <div style="font-size:13px; color:var(--text-sub); text-align:right;" id="user-nome">—</div>
-            <div style="font-size:11px; color:var(--text-dim); text-align:right;" id="user-nickname">—</div>
+            <div style="font-size:13px; color:var(--text-sub); text-align:right; font-weight:500;" id="user-nome">—</div>
+            <div style="font-size:11px; color:var(--text-dim); text-align:right; font-style:italic;" id="user-nickname">—</div>
         </div>
     </div>
 
@@ -37,49 +36,50 @@
             <div class="saldo-label">Seus Pontos</div>
             <div class="saldo-valor" id="saldo-valor">0,00</div>
             <div class="saldo-unidade">pontos disponíveis</div>
-            <a href="/catalogo" class="btn btn-gold btn-sm" style="margin-top:20px; display:inline-flex;">
+            <a href="/catalogo" class="btn btn-gold btn-sm" style="margin-top:22px; display:inline-flex;">
                 ✦ Ver Catálogo
             </a>
         </div>
     </div>
 
-    <!-- Comanda ativa (vem do backend, some quando fechada) -->
+    <!-- Comanda ativa (preenchida pelo JS) -->
     <div class="section" style="padding-top:0;" id="comanda-ativa-section"></div>
 
-    <!-- Instrução QR (só se não tiver comanda ativa) -->
-    <div class="section" style="padding-top:0;" id="sem-comanda-section" style="display:none;">
-        <div class="card" style="padding:18px 20px; text-align:center; border-style:dashed;">
-            <div style="font-size:28px; margin-bottom:8px;">📱</div>
-            <p style="font-size:13px; color:var(--text-sub); line-height:1.6;">
-                Escaneie o <strong style="color:var(--gold);">QR Code da sua mesa</strong> para vincular sua comanda
-                e ganhar pontos automaticamente.
+    <!-- Estado vazio: sem comanda -->
+    <div class="section" style="padding-top:0; display:none;" id="sem-comanda-section">
+        <div style="padding:20px; text-align:center; border:1px dashed rgba(196,136,30,0.20);
+                    border-radius:var(--radius-lg); background:rgba(196,136,30,0.03);">
+            <div style="font-size:32px; margin-bottom:10px; opacity:.7;">📱</div>
+            <p style="font-size:13px; color:var(--text-sub); line-height:1.7;">
+                Escaneie o <strong style="color:var(--amber); font-weight:600;">QR Code da sua mesa</strong><br>
+                para vincular sua comanda e ganhar pontos automaticamente.
             </p>
         </div>
     </div>
 
-    <!-- Resgates recentes -->
+    <!-- Últimos resgates -->
     <div class="section" style="padding-top:0;">
         <div class="section-header">
-            <span class="section-title" style="font-size:18px;">Últimos Resgates</span>
-            <a href="/resgates" style="color:var(--gold); font-size:12px; text-decoration:none; font-weight:600;">Ver todos →</a>
+            <span class="section-title">Últimos Resgates</span>
+            <a href="/resgates" style="color:var(--amber); font-size:11px; text-decoration:none; font-weight:600; letter-spacing:0.5px;">Ver todos →</a>
         </div>
         <div id="resgates-lista">
-            <div class="skeleton" style="height:72px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
-            <div class="skeleton" style="height:72px;border-radius:var(--radius-md);margin-bottom:10px;"></div>
+            <div class="skeleton" style="height:68px; border-radius:var(--radius-md); margin-bottom:9px;"></div>
+            <div class="skeleton" style="height:68px; border-radius:var(--radius-md);"></div>
         </div>
     </div>
 
-    <!-- Histórico resumido -->
-    <div class="section" style="padding-top:0; padding-bottom:100px;">
+    <!-- Pontos recentes -->
+    <div class="section" style="padding-top:0; padding-bottom:110px;">
         <div class="section-header">
-            <span class="section-title" style="font-size:18px;">Pontos Recentes</span>
-            <a href="/historico" style="color:var(--gold); font-size:12px; text-decoration:none; font-weight:600;">Ver todos →</a>
+            <span class="section-title">Pontos Recentes</span>
+            <a href="/historico" style="color:var(--amber); font-size:11px; text-decoration:none; font-weight:600; letter-spacing:0.5px;">Ver todos →</a>
         </div>
         <div class="card" style="padding:0 16px;">
             <div id="historico-lista">
-                <div class="skeleton" style="height:54px;margin:10px 0;border-radius:var(--radius-sm);"></div>
-                <div class="skeleton" style="height:54px;margin:10px 0;border-radius:var(--radius-sm);"></div>
-                <div class="skeleton" style="height:54px;margin:10px 0;border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:50px; margin:10px 0; border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:50px; margin:10px 0; border-radius:var(--radius-sm);"></div>
+                <div class="skeleton" style="height:50px; margin:10px 0; border-radius:var(--radius-sm);"></div>
             </div>
         </div>
     </div>
