@@ -1,6 +1,8 @@
 """
 Club — app.py  |  porta 5001
 """
+
+
 from flask import Flask, render_template, redirect, url_for
 from modules.auth.routes       import auth_bp
 from modules.produtos.routes   import produtos_bp
@@ -13,7 +15,7 @@ app = Flask(__name__)
 app.secret_key = "club_secret_key_troque_em_producao"
 
 for bp in [auth_bp, produtos_bp, pontos_bp, resgates_bp, integracao_bp, comanda_bp]:
-    app.register_blueprint(bp)
+  app.register_blueprint(bp)
 
 # ── Páginas ────────────────────────────────────────────────
 @app.route("/")
@@ -53,5 +55,11 @@ def comanda_page(numero):
     """Landing page do QR Code. Flask passa o número para o Jinja."""
     return render_template("comanda.html", numero_comanda=numero)
 
+
+from db.connection import get_connection
+
+
 if __name__ == "__main__":
+    print(">>> Servidor Flask Iniciando...")
     app.run(debug=True, host="0.0.0.0", port=5001)
+    
