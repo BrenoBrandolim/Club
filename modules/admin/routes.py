@@ -71,17 +71,15 @@ def logout():
 @admin_bp.route("/minha-senha", methods=["POST"])
 def minha_senha():
     if not _admin_logado():
-        return redirect(url_for("admin.login"))
-    atual    = request.form.get("senha_atual", "")
-    nova     = request.form.get("nova_senha", "").strip()
-    confirma = request.form.get("confirma_senha", "").strip()
+        return jsonify({"ok": False, "erro": "Não autenticado."}), 401
+    data     = request.get_json(silent=True) or {}
+    atual    = data.get("senha_atual", "")
+    nova     = data.get("nova_senha", "").strip()
+    confirma = data.get("confirma_senha", "").strip()
     if len(nova) < 4:
-        flash("Nova senha deve ter ao menos 4 caracteres.", "erro")
-        return redirect(request.referrer or url_for("admin.usuarios"))
+        return jsonify({"ok": False, "erro": "Nova senha deve ter ao menos 4 caracteres."})
     if nova != confirma:
-        flash("As senhas não coincidem.", "erro")
-        return redirect(request.referrer or url_for("admin.usuarios"))
-    # Verifica senha atual
+        return jsonify({"ok": False, "erro": "As senhas não coincidem."})
     conn = get_connection()
     cur  = conn.cursor(dictionary=True)
     try:
@@ -90,8 +88,7 @@ def minha_senha():
     finally:
         cur.close(); conn.close()
     if not row or not bcrypt.checkpw(atual.encode(), row["senha_hash"].encode()):
-        flash("Senha atual incorreta.", "erro")
-        return redirect(request.referrer or url_for("admin.usuarios"))
+        return jsonify({"ok": False, "erro": "Senha atual incorreta."})
     nova_hash = bcrypt.hashpw(nova.encode(), bcrypt.gensalt()).decode()
     conn2 = get_connection()
     cur2  = conn2.cursor()
@@ -101,8 +98,7 @@ def minha_senha():
         conn2.commit()
     finally:
         cur2.close(); conn2.close()
-    flash("Senha alterada com sucesso.", "sucesso")
-    return redirect(request.referrer or url_for("admin.usuarios"))
+    return jsonify({"ok": True})
 
 
 # ── Usuários do Clube ─────────────────────────────────────────

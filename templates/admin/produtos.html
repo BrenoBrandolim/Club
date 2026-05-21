@@ -145,40 +145,65 @@
     <div style="background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md);
                 padding:28px 32px; width:320px; max-width:90vw;">
         <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:18px;">Alterar minha senha</div>
-        <form method="POST" action="/admin/minha-senha" style="display:flex; flex-direction:column; gap:12px;">
+        <div id="msg-minha-senha" style="display:none; padding:8px 12px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:10px;"></div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
             <div>
                 <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Senha atual</label>
-                <input type="password" name="senha_atual" required
+                <input type="password" id="ms-atual"
                        style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
                               border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
             </div>
             <div>
                 <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Nova senha</label>
-                <input type="password" name="nova_senha" required minlength="4"
+                <input type="password" id="ms-nova" minlength="4"
                        style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
                               border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
             </div>
             <div>
                 <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Confirmar nova senha</label>
-                <input type="password" name="confirma_senha" required minlength="4"
+                <input type="password" id="ms-confirma" minlength="4"
                        style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
                               border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
             </div>
             <div style="display:flex; gap:10px; margin-top:4px;">
-                <button type="submit" class="btn btn-gold btn-sm" style="flex:1; padding:10px;">Salvar</button>
+                <button id="btn-salvar-senha" onclick="salvarMinhaSenha()"
+                        class="btn btn-gold btn-sm" style="flex:1; padding:10px;">Salvar</button>
                 <button type="button" onclick="document.getElementById('modal-minha-senha').style.display='none'"
                         style="flex:1; padding:10px; background:none; border:1px solid var(--border);
                                border-radius:var(--radius-sm); font-size:13px; color:var(--text-sub); cursor:pointer;">
                     Cancelar
                 </button>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 <script>
 document.getElementById('modal-minha-senha').addEventListener('click', function(e) {
     if (e.target === this) this.style.display = 'none';
 });
+async function salvarMinhaSenha() {
+    const atual = document.getElementById('ms-atual').value;
+    const nova  = document.getElementById('ms-nova').value;
+    const conf  = document.getElementById('ms-confirma').value;
+    const msgEl = document.getElementById('msg-minha-senha');
+    const btn   = document.getElementById('btn-salvar-senha');
+    const showMsg = (txt, ok) => {
+        msgEl.textContent = txt;
+        msgEl.style.cssText = `display:block; padding:8px 12px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:10px; color:var(--text); background:${ok ? 'rgba(74,140,63,0.15)' : 'rgba(192,56,40,0.15)'}; border:1px solid ${ok ? 'var(--success)' : 'var(--brick)'};`;
+    };
+    if (!atual || !nova || !conf) return showMsg('Preencha todos os campos.', false);
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    try {
+        const r = await fetch('/admin/minha-senha', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({senha_atual:atual, nova_senha:nova, confirma_senha:conf}) });
+        const d = await r.json();
+        if (d.ok) {
+            showMsg('✓ Senha alterada!', true);
+            ['ms-atual','ms-nova','ms-confirma'].forEach(id => document.getElementById(id).value = '');
+            setTimeout(() => { document.getElementById('modal-minha-senha').style.display='none'; msgEl.style.display='none'; }, 1500);
+        } else { showMsg('✗ ' + (d.erro || 'Erro.'), false); }
+    } catch(e) { showMsg('✗ Erro de conexão.', false); }
+    btn.disabled = false; btn.textContent = 'Salvar';
+}
 </script>
 </body>
 </html>
