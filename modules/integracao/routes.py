@@ -19,6 +19,7 @@ def comanda_fechada():
 
     data       = request.get_json() or {}
     comanda_id = data.get("comanda_id")
+    numero     = data.get("numero", comanda_id)   # número de display (ex: 4); fallback para id
     lucro      = float(data.get("lucro_liquido", 0))
 
     if not comanda_id:
@@ -38,9 +39,9 @@ def comanda_fechada():
     registrar_pontos_db(
         usuario_id = usuario_id,
         tipo       = "ganho",
-        valor      = pontos,   # float
+        valor      = pontos,
         comanda_id = comanda_id,
-        descricao  = f"Comanda #{comanda_id} — R$ {lucro:.2f} lucro → {pontos:.4f} pts",
+        descricao  = f"Comanda #{numero} — R$ {lucro:.2f} lucro → {pontos:.4f} pts",
     )
 
     return jsonify({

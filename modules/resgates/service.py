@@ -5,9 +5,10 @@ import requests
 from modules.pontos.repository   import buscar_saldo_db
 from modules.pontos.service      import debitar_pontos_service
 from modules.produtos.repository import buscar_produto_por_id_db
-from .repository import registrar_resgate_db, listar_resgates_usuario_db
+from .repository import registrar_resgate_db, listar_resgates_usuario_db, buscar_resgate_entregue_db
 
-CAIXA_URL     = "http://localhost:5000"
+import os
+CAIXA_URL     = os.getenv("CAIXA_URL", "http://localhost:5000")
 CAIXA_API_KEY = "comandas_api_key_qualquer_coisa_longa_e_segura"
 _HEADERS      = {"x-api-key": CAIXA_API_KEY}
 
@@ -116,8 +117,12 @@ def resgatar_produto_service(
     descricao = f"Resgate: {produto['nome']} ({tipo})" + (" [subs]" if substituir else "")
     debitar_pontos_service(usuario_id, pontos_necessarios, comanda_id_interno, descricao)
 
-    # 6. Registra
-    registrar_resgate_db(usuario_id, produto_id, comanda_id_interno, pontos_necessarios, tipo)
+    # 6. Registra resgate APENAS se ainda não foi entregue para este produto+comanda.
+    #    Se já foi entregue (substituição de local↔viagem após entrega), não cria novo
+    #    pedido pendente — só atualiza a comanda no Caixa (já feito acima).
+    ja_entregue = buscar_resgate_entregue_db(usuario_id, produto_id, comanda_id_interno)
+    if not ja_entregue:
+        registrar_resgate_db(usuario_id, produto_id, comanda_id_interno, pontos_necessarios, tipo)
 
     acao = "substituido" if substituir else "adicionado"
     return {"ok": True, "message": f"{produto['nome']} {acao} na comanda #{numero_comanda}!"}

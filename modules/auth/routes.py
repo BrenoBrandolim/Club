@@ -4,8 +4,10 @@ modules/auth/routes.py
 from flask import Blueprint, request, jsonify
 from .service import criar_usuario_service, login_service, buscar_perfil_service
 from .decorator import auth_required
+from .repository import buscar_usuarios_por_termo_db
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/usuarios")
+CAIXA_API_KEY = "comandas_api_key_qualquer_coisa_longa_e_segura"
 
 
 @auth_bp.route("/", methods=["POST"])
@@ -40,3 +42,28 @@ def perfil(usuario_id_token):
     if not usuario:
         return jsonify({"ok": False, "message": "Usuário não encontrado"}), 404
     return jsonify({"ok": True, "usuario": usuario})
+
+
+@auth_bp.route("/buscar", methods=["GET"])
+def buscar_usuarios():
+    if request.headers.get("x-api-key") != CAIXA_API_KEY:
+        return jsonify({"ok": False, "message": "Não autorizado"}), 401
+
+    termo = request.args.get("q", "").strip()
+    if len(termo) < 2:
+        return jsonify({"ok": True, "usuarios": []})
+
+    usuarios = buscar_usuarios_por_termo_db(termo)
+    return jsonify({
+        "ok": True,
+        "usuarios": [
+            {
+                "id":           u["id"],
+                "nome":         u["nome"],
+                "nickname":     u["nickname"],
+                "saldo_pontos": float(u["saldo_pontos"]),
+                "label":        f"{u['nome']} (@{u['nickname']})",
+            }
+            for u in usuarios
+        ],
+    })

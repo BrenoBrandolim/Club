@@ -62,17 +62,17 @@ def upsert_produto_db(item_id: int, nome: str, pontos: float, preco_dinheiro: fl
         conn.close()
 
 
-def editar_produto_db(produto_id: int, nome: str, foto_url: str, pontos: float, ativo: bool):
+def editar_produto_db(produto_id: int, nome: str, foto_url: str, pontos: float, preco_dinheiro: float, ativo: bool):
     conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
             UPDATE produtos_clube
-            SET nome = %s, foto_url = %s, pontos_necessarios = %s, ativo = %s
+            SET nome = %s, foto_url = %s, pontos_necessarios = %s, preco_dinheiro = %s, ativo = %s
             WHERE id = %s
             """,
-            (nome, foto_url, pontos, ativo, produto_id),
+            (nome, foto_url, pontos, preco_dinheiro, ativo, produto_id),
         )
         conn.commit()
     finally:

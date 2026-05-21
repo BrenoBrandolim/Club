@@ -13,7 +13,8 @@ from db.connection import get_connection
 
 comanda_bp = Blueprint("comanda", __name__)
 
-CAIXA_URL     = "http://localhost:5000"
+import os
+CAIXA_URL     = os.getenv("CAIXA_URL", "http://localhost:5000")
 CAIXA_API_KEY = "comandas_api_key_qualquer_coisa_longa_e_segura"
 _HEADERS      = {"x-api-key": CAIXA_API_KEY}
 
@@ -153,6 +154,69 @@ def vincular_comanda(numero, usuario_id_token):
     finally:
         cursor2.close()
         conn2.close()
+
+
+@comanda_bp.route("/api/comanda/<int:numero>/vincular-caixa", methods=["POST"])
+def vincular_comanda_caixa(numero):
+    """Chamado pelo NewBox quando o operador vincula um cliente da comanda.
+
+    Se o payload já traz comanda_id (enviado pelo NewBox que já validou),
+    pula o round-trip de status check — reduz latência.
+    """
+    if request.headers.get("x-api-key") != CAIXA_API_KEY:
+        return jsonify({"ok": False, "message": "Não autorizado"}), 401
+
+    data            = request.get_json() or {}
+    usuario_id      = data.get("usuario_id")
+    comanda_id_body = data.get("comanda_id")       # opcional — enviado pelo NewBox v2
+    numero_comanda  = data.get("numero_comanda", numero)
+
+    if not usuario_id:
+        return jsonify({"ok": False, "message": "usuario_id obrigatório"}), 400
+
+    # Se o NewBox já mandou o comanda_id interno, usa direto (sem round-trip)
+    if comanda_id_body:
+        comanda_id = comanda_id_body
+    else:
+        # Fallback: busca comanda_id via Caixa (compatibilidade com versões antigas)
+        try:
+            resp = requests.get(
+                f"{CAIXA_URL}/comandas/api/comanda/status/{numero}",
+                headers=_HEADERS, timeout=4,
+            )
+            data_caixa = resp.json()
+        except requests.RequestException as e:
+            return jsonify({"ok": False, "message": f"Caixa indisponível: {e}"}), 503
+
+        if not data_caixa.get("ok"):
+            return jsonify({"ok": False, "message": "Comanda não encontrada"}), 404
+        if not data_caixa.get("aberta"):
+            return jsonify({"ok": False, "message": "Comanda não está aberta"}), 409
+
+        comanda_id = data_caixa["comanda_id"]
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT id, usuario_id FROM usuarios_comandas WHERE comanda_id = %s",
+            (comanda_id,),
+        )
+        vinculo = cursor.fetchone()
+        if vinculo:
+            if vinculo["usuario_id"] == usuario_id:
+                return jsonify({"ok": True, "message": "Já vinculado."})
+            return jsonify({"ok": False, "message": "Comanda já vinculada a outro usuário."}), 409
+
+        cursor.execute(
+            "INSERT INTO usuarios_comandas (usuario_id, comanda_id, numero_comanda) VALUES (%s, %s, %s)",
+            (usuario_id, comanda_id, numero_comanda),
+        )
+        conn.commit()
+        return jsonify({"ok": True, "message": f"Comanda #{numero_comanda} vinculada com sucesso."})
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @comanda_bp.route("/api/comanda/ativa", methods=["GET"])

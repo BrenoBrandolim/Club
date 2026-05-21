@@ -56,10 +56,11 @@ def sincronizar():
 def editar_produto(produto_id, usuario_id_token):
     data = request.get_json() or {}
     editar_produto_service(
-        produto_id = produto_id,
-        nome       = data.get("nome"),
-        foto_url   = data.get("foto_url", ""),
-        pontos     = data.get("pontos", 0),
-        ativo      = data.get("ativo", True),
+        produto_id     = produto_id,
+        nome           = data.get("nome"),
+        foto_url       = data.get("foto_url", ""),
+        pontos         = data.get("pontos", 0),
+        preco_dinheiro = data.get("preco_dinheiro", 0),
+        ativo          = data.get("ativo", True),
     )
     return jsonify({"ok": True, "message": "Produto atualizado"})

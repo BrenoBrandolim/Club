@@ -11,11 +11,12 @@ CREATE TABLE usuarios (
 
 CREATE TABLE usuarios_comandas (
 	id INT AUTO_INCREMENT PRIMARY KEY,
-    comanda_id INT NOT NULL UNIQUE,
-    usuario_id INT NOT NULL,
+    comanda_id     INT NOT NULL UNIQUE,
+    usuario_id     INT NOT NULL,
+    numero_comanda INT NULL,           -- número de display (ex: 4), para consulta de status
     data_vinculacao DATETIME DEFAULT CURRENT_TIMESTAMP,
     processada BOOLEAN DEFAULT FALSE,
-    
+
     INDEX idx_usuario_comandas(usuario_id),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
@@ -60,6 +61,25 @@ CREATE TABLE resgates (
     FOREIGN KEY (produto_id) REFERENCES produtos_clube(id)
 );
 
+CREATE TABLE admins (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    nome         VARCHAR(150) NOT NULL,
+    nickname     VARCHAR(150) NOT NULL UNIQUE,
+    senha_hash   VARCHAR(255) NOT NULL,
+    is_super     BOOLEAN NOT NULL DEFAULT FALSE,
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Super admin inicial (senha: admin1234 — troque após o primeiro acesso)
+INSERT INTO admins (nome, nickname, senha_hash, is_super)
+VALUES (
+    'Breno Brandolim',
+    '1930b124',
+    '$2b$12$nk.fwjDWw0Ba.wVjyEfa0.LkIdXLVQbO2DLjOj5kGIFwJFOWAscry',
+    TRUE
+);
+
+-- Usuário de teste (remova em produção)
 INSERT INTO usuarios (nome, nickname, senha_hash)
 VALUES ('Breno', 'light', '123456');
 

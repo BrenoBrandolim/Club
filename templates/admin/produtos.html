@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos · Admin · Club</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="page">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div style="font-family:var(--font-display); font-size:22px; color:var(--amber); letter-spacing:2px;">ADMIN</div>
+        <div style="display:flex; gap:16px; align-items:center;">
+            <a href="/admin/usuarios" style="font-size:13px; color:var(--text-sub);">Usuários</a>
+            <a href="/admin/produtos"  style="font-size:13px; color:var(--amber); font-weight:600;">Produtos</a>
+            {% if is_super %}<a href="/admin/admins" style="font-size:13px; color:var(--text-sub);">Admins</a>{% endif %}
+            <button onclick="document.getElementById('modal-minha-senha').style.display='flex'"
+                    style="background:none; border:1px solid var(--border); border-radius:var(--radius-sm);
+                           padding:5px 12px; font-size:12px; color:var(--text-sub); cursor:pointer;">
+                Minha senha
+            </button>
+            <a href="/admin/logout"    style="font-size:13px; color:var(--text-dim);">Sair</a>
+        </div>
+    </div>
+
+    <div class="section">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--text-sub); margin-bottom:16px;">
+            Produtos do catálogo
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for cat, msg in messages %}
+            <div style="background:{% if cat == 'sucesso' %}rgba(74,140,63,0.15); border-color:var(--success){% else %}rgba(192,56,40,0.15); border-color:var(--brick){% endif %};
+                        border:1px solid; border-radius:var(--radius-sm); padding:10px 14px;
+                        margin-bottom:16px; font-size:13px; color:var(--text);">
+                {{ msg }}
+            </div>
+            {% endfor %}
+        {% endwith %}
+
+        {% for p in produtos %}
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md);
+                    padding:16px 20px; margin-bottom:12px;">
+
+            <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;">
+
+                <!-- Foto -->
+                {% if p.foto_url %}
+                <img src="{{ p.foto_url }}" alt="{{ p.nome }}"
+                     style="width:56px; height:56px; object-fit:cover; border-radius:var(--radius-sm);
+                            border:1px solid var(--border); flex-shrink:0;"
+                     onerror="this.style.display='none'">
+                {% endif %}
+
+                <!-- Info -->
+                <div style="flex:1; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <span style="font-size:15px; font-weight:600; color:var(--text);">{{ p.nome }}</span>
+                        <span style="font-size:11px; padding:2px 8px; border-radius:20px;
+                                     {% if p.ativo %}background:rgba(74,140,63,0.15); color:var(--success){% else %}background:rgba(192,56,40,0.12); color:var(--brick){% endif %}">
+                            {% if p.ativo %}ativo{% else %}inativo{% endif %}
+                        </span>
+                    </div>
+                    <div style="font-size:13px; color:var(--amber); margin-top:4px; font-family:var(--font-mono);">
+                        {{ '%.2f'|format(p.pontos_necessarios) }} pts
+                        {% if p.preco_dinheiro %} · R$ {{ '%.2f'|format(p.preco_dinheiro) }}{% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Formulário de edição inline -->
+            <details style="margin-top:14px;">
+                <summary style="cursor:pointer; list-style:none; font-size:12px; color:var(--text-sub);
+                                padding:6px 0; user-select:none;">
+                    ✎ Editar produto
+                </summary>
+
+                <form method="POST" action="/admin/produtos/{{ p.id }}/editar"
+                      style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+
+                    <div>
+                        <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Nome</label>
+                        <input type="text" name="nome" value="{{ p.nome }}" required
+                               style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                                      border-radius:var(--radius-sm); color:var(--text); font-size:13px;">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div>
+                            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Pontos necessários</label>
+                            <input type="number" name="pontos_necessarios" value="{{ p.pontos_necessarios }}"
+                                   step="0.01" min="0" required
+                                   style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                                          border-radius:var(--radius-sm); color:var(--text); font-size:13px;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Preço em dinheiro (R$)</label>
+                            <input type="number" name="preco_dinheiro" value="{{ p.preco_dinheiro or 0 }}"
+                                   step="0.01" min="0"
+                                   style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                                          border-radius:var(--radius-sm); color:var(--text); font-size:13px;">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">URL da foto</label>
+                        <input type="text" name="foto_url" value="{{ p.foto_url or '' }}"
+                               style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                                      border-radius:var(--radius-sm); color:var(--text); font-size:13px;">
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:20px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-sub);">
+                            <input type="hidden"   name="ativo" value="0">
+                            <input type="checkbox" name="ativo" value="1" {% if p.ativo %}checked{% endif %}
+                                   style="accent-color:var(--amber); width:15px; height:15px;">
+                            Produto ativo
+                        </label>
+
+                        <button type="submit" class="btn btn-gold btn-sm" style="margin-left:auto;">
+                            Salvar alterações
+                        </button>
+                    </div>
+
+                </form>
+            </details>
+
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:40px; color:var(--text-dim);">
+            Nenhum produto cadastrado. Sincronize pelo Caixa.
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- Modal: Minha Senha -->
+<div id="modal-minha-senha"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
+            z-index:999; align-items:center; justify-content:center;">
+    <div style="background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md);
+                padding:28px 32px; width:320px; max-width:90vw;">
+        <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:18px;">Alterar minha senha</div>
+        <form method="POST" action="/admin/minha-senha" style="display:flex; flex-direction:column; gap:12px;">
+            <div>
+                <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Senha atual</label>
+                <input type="password" name="senha_atual" required
+                       style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Nova senha</label>
+                <input type="password" name="nova_senha" required minlength="4"
+                       style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Confirmar nova senha</label>
+                <input type="password" name="confirma_senha" required minlength="4"
+                       style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
+            </div>
+            <div style="display:flex; gap:10px; margin-top:4px;">
+                <button type="submit" class="btn btn-gold btn-sm" style="flex:1; padding:10px;">Salvar</button>
+                <button type="button" onclick="document.getElementById('modal-minha-senha').style.display='none'"
+                        style="flex:1; padding:10px; background:none; border:1px solid var(--border);
+                               border-radius:var(--radius-sm); font-size:13px; color:var(--text-sub); cursor:pointer;">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.getElementById('modal-minha-senha').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+</script>
+</body>
+</html>

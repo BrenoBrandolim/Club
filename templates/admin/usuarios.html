@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários · Admin · Club</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="page">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div style="font-family:var(--font-display); font-size:22px; color:var(--amber); letter-spacing:2px;">ADMIN</div>
+        <div style="display:flex; gap:16px; align-items:center;">
+            <a href="/admin/usuarios" style="font-size:13px; color:var(--amber); font-weight:600;">Usuários</a>
+            <a href="/admin/produtos"  style="font-size:13px; color:var(--text-sub);">Produtos</a>
+            {% if is_super %}<a href="/admin/admins" style="font-size:13px; color:var(--text-sub);">Admins</a>{% endif %}
+            <button onclick="document.getElementById('modal-minha-senha').style.display='flex'"
+                    style="background:none; border:1px solid var(--border); border-radius:var(--radius-sm);
+                           padding:5px 12px; font-size:12px; color:var(--text-sub); cursor:pointer;">
+                Minha senha
+            </button>
+            <a href="/admin/logout" style="font-size:13px; color:var(--text-dim);">Sair</a>
+        </div>
+    </div>
+
+    <div class="section">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+            <div style="font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--text-sub);">
+                Usuários cadastrados
+            </div>
+            <!-- Barra de pesquisa -->
+            <input id="busca-usuario" type="text" placeholder="Buscar por nome ou @apelido…"
+                   oninput="filtrarUsuarios(this.value)"
+                   style="padding:9px 14px; background:var(--surface2); border:1px solid var(--border);
+                          border-radius:var(--radius-sm); color:var(--text); font-size:13px; width:260px;">
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for cat, msg in messages %}
+            <div style="background:{% if cat == 'sucesso' %}rgba(74,140,63,0.15); border-color:var(--success){% else %}rgba(192,56,40,0.15); border-color:var(--brick){% endif %};
+                        border:1px solid; border-radius:var(--radius-sm); padding:10px 14px;
+                        margin-bottom:16px; font-size:13px; color:var(--text);">
+                {{ msg }}
+            </div>
+            {% endfor %}
+        {% endwith %}
+
+        <div id="lista-usuarios">
+        {% for u in usuarios %}
+        <div class="usuario-card" data-busca="{{ u.nome|lower }} @{{ u.nickname|lower }}"
+             style="background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md);
+                    padding:16px 20px; margin-bottom:12px;">
+
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+
+                <!-- Info do usuário -->
+                <div>
+                    <div style="font-size:16px; font-weight:600; color:var(--text);">{{ u.nome }}</div>
+                    <div style="font-size:13px; color:var(--text-sub); margin-top:2px;">@{{ u.nickname }}</div>
+                    <div style="font-size:12px; color:var(--text-dim); margin-top:4px;">
+                        Cadastro: {{ u.data_criacao.strftime('%d/%m/%Y') if u.data_criacao else '—' }}
+                    </div>
+                </div>
+
+                <!-- Saldo -->
+                <div style="text-align:right;">
+                    <div style="font-family:var(--font-mono); font-size:18px; color:var(--amber); font-weight:600;">
+                        {{ '%.2f'|format(u.saldo_pontos) }}
+                    </div>
+                    <div style="font-size:11px; color:var(--text-dim);">pontos</div>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+
+                <!-- Histórico -->
+                <button type="button" onclick="toggleHistorico(this, {{ u.id }})"
+                        style="background:var(--surface3); border:1px solid var(--border); border-radius:var(--radius-sm);
+                               padding:7px 14px; font-size:12px; color:var(--text-sub); cursor:pointer;">
+                    Ver histórico
+                </button>
+
+                <!-- Reset de senha -->
+                <details>
+                    <summary style="cursor:pointer; list-style:none; background:var(--surface3);
+                                    border:1px solid var(--border); border-radius:var(--radius-sm);
+                                    padding:7px 14px; font-size:12px; color:var(--text-sub); user-select:none;">
+                        Redefinir senha
+                    </summary>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <form method="POST" action="/admin/usuarios/{{ u.id }}/reset-senha"
+                              style="display:flex; gap:8px;">
+                            <input type="password" name="nova_senha" placeholder="Nova senha" required minlength="4"
+                                   style="padding:8px 12px; background:var(--surface); border:1px solid var(--border);
+                                          border-radius:var(--radius-sm); color:var(--text); font-size:13px; width:160px;">
+                            <button type="submit" class="btn btn-gold btn-sm">Salvar</button>
+                        </form>
+                    </div>
+                </details>
+
+                <!-- Deletar -->
+                <form method="POST" action="/admin/usuarios/{{ u.id }}/deletar"
+                      onsubmit="return confirm('Deletar {{ u.nome }}? Esta ação não pode ser desfeita.')">
+                    <button type="submit"
+                            style="background:none; border:1px solid rgba(192,56,40,0.40); border-radius:var(--radius-sm);
+                                   padding:7px 14px; font-size:12px; color:var(--brick); cursor:pointer;">
+                        Remover
+                    </button>
+                </form>
+
+            </div>
+
+            <!-- Painel de histórico (oculto inicialmente) -->
+            <div id="hist-{{ u.id }}" style="display:none; margin-top:14px;
+                 border-top:1px solid var(--border); padding-top:14px;">
+                <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px;
+                            color:var(--text-dim); margin-bottom:10px;">Carregando histórico…</div>
+            </div>
+
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:40px; color:var(--text-dim);">Nenhum usuário cadastrado.</div>
+        {% endfor %}
+        </div>
+
+    </div><!-- /section -->
+
+</div><!-- /page -->
+
+<!-- ════ Modal: Minha Senha ════ -->
+<div id="modal-minha-senha"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
+            z-index:999; align-items:center; justify-content:center;">
+    <div style="background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md);
+                padding:28px 32px; width:320px; max-width:90vw;">
+        <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:18px;">Alterar minha senha</div>
+        <form method="POST" action="/admin/minha-senha" style="display:flex; flex-direction:column; gap:12px;">
+            <div>
+                <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Senha atual</label>
+                <input type="password" name="senha_atual" required
+                       style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Nova senha</label>
+                <input type="password" name="nova_senha" required minlength="4"
+                       style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="font-size:11px; color:var(--text-sub); display:block; margin-bottom:4px;">Confirmar nova senha</label>
+                <input type="password" name="confirma_senha" required minlength="4"
+                       style="width:100%; padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:13px; box-sizing:border-box;">
+            </div>
+            <div style="display:flex; gap:10px; margin-top:4px;">
+                <button type="submit" class="btn btn-gold btn-sm" style="flex:1; padding:10px;">Salvar</button>
+                <button type="button" onclick="document.getElementById('modal-minha-senha').style.display='none'"
+                        style="flex:1; padding:10px; background:none; border:1px solid var(--border);
+                               border-radius:var(--radius-sm); font-size:13px; color:var(--text-sub); cursor:pointer;">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// ── Busca client-side ────────────────────────────────────────
+function filtrarUsuarios(termo) {
+    const t = termo.toLowerCase().trim();
+    document.querySelectorAll('.usuario-card').forEach(card => {
+        const haystack = card.dataset.busca || '';
+        card.style.display = (!t || haystack.includes(t)) ? '' : 'none';
+    });
+}
+
+// ── Histórico expandível ─────────────────────────────────────
+const _carregados = {};
+
+function toggleHistorico(btn, uid) {
+    const painel = document.getElementById('hist-' + uid);
+    const aberto = painel.style.display !== 'none';
+    if (aberto) {
+        painel.style.display = 'none';
+        btn.textContent = 'Ver histórico';
+        return;
+    }
+    painel.style.display = 'block';
+    btn.textContent = 'Ocultar histórico';
+    if (_carregados[uid]) return;   // já carregou
+
+    fetch('/admin/usuarios/' + uid + '/historico')
+        .then(r => r.json())
+        .then(data => {
+            _carregados[uid] = true;
+            if (!data.ok) { painel.innerHTML = '<div style="font-size:13px;color:var(--text-dim);">Erro ao carregar.</div>'; return; }
+
+            let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; flex-wrap:wrap;">';
+
+            // Pontos
+            html += '<div>';
+            html += '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px;">Pontos</div>';
+            if (data.pontos.length === 0) {
+                html += '<div style="font-size:13px;color:var(--text-dim);">Nenhum registro.</div>';
+            } else {
+                data.pontos.forEach(p => {
+                    const cor = p.tipo === 'ganho' ? 'var(--success)' : 'var(--brick)';
+                    const sinal = p.tipo === 'ganho' ? '+' : '−';
+                    html += `<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;">
+                        <span style="color:var(--text-sub);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.descricao}">${p.descricao || '—'}</span>
+                        <span style="color:${cor};font-family:var(--font-mono);white-space:nowrap;">${sinal}${p.valor.toFixed(2)} pts</span>
+                        <span style="color:var(--text-dim);font-size:11px;white-space:nowrap;">${p.data}</span>
+                    </div>`;
+                });
+            }
+            html += '</div>';
+
+            // Resgates
+            html += '<div>';
+            html += '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px;">Resgates</div>';
+            if (data.resgates.length === 0) {
+                html += '<div style="font-size:13px;color:var(--text-dim);">Nenhum resgate.</div>';
+            } else {
+                data.resgates.forEach(r => {
+                    const statusCor = r.status === 'entregue' ? 'var(--success)' : 'var(--amber)';
+                    html += `<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;">
+                        <span style="color:var(--text-sub);flex:1;">${r.produto_nome}</span>
+                        <span style="color:${statusCor};font-size:11px;">${r.status}</span>
+                        <span style="color:var(--text-dim);font-size:11px;white-space:nowrap;">${r.data}</span>
+                    </div>`;
+                });
+            }
+            html += '</div>';
+
+            html += '</div>'; // grid
+            painel.innerHTML = html;
+        })
+        .catch(() => { painel.innerHTML = '<div style="font-size:13px;color:var(--text-dim);">Erro de conexão.</div>'; });
+}
+
+// Fecha modal clicando fora
+document.getElementById('modal-minha-senha').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+</script>
+
+</body>
+</html>

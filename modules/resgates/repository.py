@@ -22,6 +22,26 @@ def registrar_resgate_db(usuario_id, produto_id, comanda_id, pontos_gastos, tipo
         conn.close()
 
 
+def buscar_resgate_entregue_db(usuario_id: int, produto_id: int, comanda_id: int):
+    """Retorna o resgate se já estiver marcado como 'entregue' para este produto+comanda."""
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT id FROM resgates
+            WHERE usuario_id = %s AND produto_id = %s AND comanda_id = %s
+              AND status = 'entregue'
+            LIMIT 1
+            """,
+            (usuario_id, produto_id, comanda_id),
+        )
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def listar_resgates_usuario_db(usuario_id: int) -> list:
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)

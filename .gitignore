@@ -1,4 +1,9 @@
 .env
 __pycache__/
 *.pyc
+*.pyo
 venv/
+Club/
+*.bat
+teste_db.py
+schema/

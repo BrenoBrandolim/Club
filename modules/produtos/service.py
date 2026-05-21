@@ -16,5 +16,5 @@ def sincronizar_produto_service(item_id, nome, pontos, preco_dinheiro, foto_url)
     upsert_produto_db(item_id, nome, float(pontos or 0), float(preco_dinheiro or 0), foto_url or "")
 
 
-def editar_produto_service(produto_id, nome, foto_url, pontos, ativo):
-    editar_produto_db(produto_id, nome, foto_url, float(pontos), bool(ativo))
+def editar_produto_service(produto_id, nome, foto_url, pontos, preco_dinheiro, ativo):
+    editar_produto_db(produto_id, nome, foto_url, float(pontos), float(preco_dinheiro), bool(ativo))

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin · Club</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="page" style="display:flex; align-items:center; justify-content:center; min-height:100vh;">
+    <div style="width:100%; max-width:360px; padding:0 20px;">
+
+        <div style="text-align:center; margin-bottom:32px;">
+            <div style="font-family:var(--font-display); font-size:32px; color:var(--amber); letter-spacing:2px;">ADMIN</div>
+            <div style="font-size:13px; color:var(--text-sub); margin-top:4px;">Painel Administrativo · Club</div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for cat, msg in messages %}
+            <div style="background:rgba(192,56,40,0.15); border:1px solid var(--brick); border-radius:var(--radius-sm);
+                        padding:10px 14px; margin-bottom:16px; font-size:13px; color:var(--text);">{{ msg }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST" style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+                <label style="font-size:12px; color:var(--text-sub); display:block; margin-bottom:6px;">Nickname</label>
+                <input type="text" name="nickname" placeholder="@seunick" autofocus required
+                       style="width:100%; padding:12px 14px; background:var(--surface2); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:15px;">
+            </div>
+            <div>
+                <label style="font-size:12px; color:var(--text-sub); display:block; margin-bottom:6px;">Senha</label>
+                <input type="password" name="senha" required
+                       style="width:100%; padding:12px 14px; background:var(--surface2); border:1px solid var(--border);
+                              border-radius:var(--radius-sm); color:var(--text); font-size:15px;">
+            </div>
+            <button type="submit" class="btn btn-gold" style="width:100%; padding:13px; font-size:15px;">Entrar</button>
+        </form>
+
+        <div style="text-align:center; margin-top:24px;">
+            <a href="/" style="font-size:12px; color:var(--text-dim);">← Voltar ao Club</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

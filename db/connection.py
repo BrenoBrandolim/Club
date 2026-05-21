@@ -4,15 +4,21 @@ import os
 
 load_dotenv()
 
+# Railway injeta MYSQLHOST/MYSQLUSER/MYSQLPASSWORD/MYSQLDATABASE/MYSQLPORT
+# Localmente usamos DB_HOST/DB_USER/DB_PASSWORD/DB_NAME
+def _build_conn():
+    return pymysql.connect(
+        host     = os.getenv("MYSQLHOST")     or os.getenv("DB_HOST",     "127.0.0.1"),
+        user     = os.getenv("MYSQLUSER")     or os.getenv("DB_USER",     "root"),
+        password = os.getenv("MYSQLPASSWORD") or os.getenv("DB_PASSWORD", ""),
+        database = os.getenv("MYSQLDATABASE") or os.getenv("DB_NAME",     "BancoClube"),
+        port     = int(os.getenv("MYSQLPORT") or os.getenv("DB_PORT",     3306)),
+    )
+
+
 class MyConnection:
     def __init__(self):
-        self.conn = pymysql.connect(
-            host=os.getenv("DB_HOST", "127.0.0.1"),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASSWORD", "admin123"),
-            database=os.getenv("DB_NAME"),
-            port=3306
-        )
+        self.conn = _build_conn()
 
     def cursor(self, dictionary=False):
         if dictionary:
@@ -27,5 +33,4 @@ class MyConnection:
 
 
 def get_connection():
-    print("🔌 Conectando com pymysql...")
     return MyConnection()

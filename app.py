@@ -9,13 +9,18 @@ from modules.produtos.routes   import produtos_bp
 from modules.pontos.routes     import pontos_bp
 from modules.resgates.routes   import resgates_bp
 from modules.integracao.routes import integracao_bp
-from modules.comandas.routes    import comanda_bp
+from modules.comandas.routes   import comanda_bp
+from modules.admin.routes      import admin_bp
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "club_secret_key_troque_em_producao"
+app.secret_key = os.getenv("SECRET_KEY", "club_secret_key_troque_em_producao")
 
-for bp in [auth_bp, produtos_bp, pontos_bp, resgates_bp, integracao_bp, comanda_bp]:
-  app.register_blueprint(bp)
+for bp in [auth_bp, produtos_bp, pontos_bp, resgates_bp, integracao_bp, comanda_bp, admin_bp]:
+    app.register_blueprint(bp)
 
 # ── Páginas ────────────────────────────────────────────────
 @app.route("/")
