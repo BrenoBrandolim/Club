@@ -14,28 +14,6 @@ from db.connection import get_connection
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 
-# ── Setup temporário (remover após uso) ───────────────────────
-@admin_bp.route("/setup-admin")
-def setup_admin():
-    """Rota temporária para criar/resetar o super admin. Remover após uso."""
-    import os
-    if os.getenv("RAILWAY_ENVIRONMENT") != "production":
-        return "Apenas em produção.", 403
-    nova_hash = bcrypt.hashpw(b"1930b124", bcrypt.gensalt()).decode()
-    conn = get_connection()
-    cur = conn.cursor()
-    try:
-        cur.execute("DELETE FROM admins WHERE nickname = '1930b124' OR nickname = 'BrenoBrandolim'")
-        cur.execute(
-            "INSERT INTO admins (nome, nickname, senha_hash, is_super) VALUES (%s, %s, %s, TRUE)",
-            ("Breno Brandolim", "BrenoBrandolim", nova_hash),
-        )
-        conn.commit()
-    finally:
-        cur.close(); conn.close()
-    return "Admin criado! Nick: BrenoBrandolim | Senha: 1930b124 — Remova esta rota agora."
-
-
 # ── Helpers ───────────────────────────────────────────────────
 
 def _admin_logado():
